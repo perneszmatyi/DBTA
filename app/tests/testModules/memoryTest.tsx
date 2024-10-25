@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 
-interface MemoryTestProps {
+type MemoryTestProps = {
   onComplete: () => void;
-}
+};
 
-const MemoryTest: React.FC<MemoryTestProps> = ({ onComplete }) => {
+const MemoryTest = ({ onComplete }: MemoryTestProps) => {
   return (
     <View className="flex-1 items-center justify-center bg-gray-100">
       <Text className="text-3xl font-bold mb-8 text-yellow-600">Memory Test</Text>
