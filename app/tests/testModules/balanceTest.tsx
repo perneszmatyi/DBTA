@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 
-interface BalanceTestProps {
+type BalanceTestProps = {
   onComplete: () => void;
-}
+};
 
-const BalanceTest: React.FC<BalanceTestProps> = ({ onComplete }) => {
+const BalanceTest = ({ onComplete }: BalanceTestProps) => {
   return (
     <View className="flex-1 items-center justify-center bg-gray-100">
       <Text className="text-3xl font-bold mb-8 text-purple-600">Balance Test</Text>

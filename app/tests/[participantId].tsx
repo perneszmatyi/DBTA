@@ -18,7 +18,7 @@ const tests = [
 
 export default function TestController() {
   const { participantId } = useLocalSearchParams();
-  const [currentTestIndex, setCurrentTestIndex] = useState(-1);
+  const [currentTestIndex, setCurrentTestIndex] = useState(1);
   const [testCompleted, setTestCompleted] = useState(false);
 
   const startNextTest = () => {

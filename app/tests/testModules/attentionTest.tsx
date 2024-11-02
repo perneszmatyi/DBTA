@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 
-interface AttentionTestProps {
+type AttentionTestProps = {
   onComplete: () => void;
-}
+};
 
-const AttentionTest: React.FC<AttentionTestProps> = ({ onComplete }) => {
+const AttentionTest = ({ onComplete }: AttentionTestProps) => {
   return (
     <View className="flex-1 items-center justify-center bg-gray-100">
       <Text className="text-3xl font-bold mb-8 text-green-600">Attention Test</Text>

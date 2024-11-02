@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 
-interface ImpulseControlTestProps {
+type ImpulseControlTestProps = {
   onComplete: () => void;
-}
+};
 
-const ImpulseControlTest: React.FC<ImpulseControlTestProps> = ({ onComplete }) => {
+const ImpulseControlTest = ({ onComplete }: ImpulseControlTestProps) => {
   return (
     <View className="flex-1 items-center justify-center bg-gray-100">
       <Text className="text-3xl font-bold mb-8 text-blue-600">Impulse Control Test</Text>
