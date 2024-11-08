@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions, Text } from 'react-native';
+import TestIntro from '@/components/TestIntro';
 
 type MemoryTestProps = {
   onComplete: (results: {
@@ -146,12 +147,17 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
 
   if (!testStarted) {
     return (
-      <TouchableOpacity 
-        style={styles.container} 
-        onPress={startTest}
-      >
-        <Text style={styles.startText}>Tap the screen to start the memory test</Text>
-      </TouchableOpacity>
+      <TestIntro
+        title="Memory Test"
+        description="Test your visual memory and sequence recall"
+        instructions={[
+          "Watch the sequence of highlighted squares",
+          "Repeat the sequence by tapping the squares in order",
+          "The sequence will get longer after each successful attempt",
+          "Try to remember as many sequences as possible"
+        ]}
+        onStart={startTest}
+      />
     );
   }
 
