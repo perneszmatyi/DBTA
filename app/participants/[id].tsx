@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Header from '@/components/navigation/Header';
 
 type Participant = {
   id: string;
@@ -55,6 +56,7 @@ export default function ParticipantDetailsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
+      <Header title="Participant Details" />
       <ScrollView className="flex-1">
         <View className="px-4">
           {/* Header */}

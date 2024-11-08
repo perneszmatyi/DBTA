@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Header from '@/components/navigation/Header';
 
 type Participant = {
   id: string;
@@ -62,6 +63,7 @@ export default function GroupDetailsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
+      <Header title="Group Details" />
       <View className="flex-1 px-4">
         {/* Header */}
         <View className="py-6">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import Header from '@/components/navigation/Header';
 
 import ReactionTimeTest from './testModules/reactionTimeTest';
 import MemoryTest from './testModules/memoryTest';
@@ -15,18 +16,19 @@ const tests = [
 ];
 
 export default function TestScreen() {
-  const [currentTestIndex, setCurrentTestIndex] = useState(1);
+  const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const { participantId } = useLocalSearchParams();
 
+  const handleQuitTest = () => {
+    router.push(`/participants/${participantId}`);
+  };
+
   const handleTestComplete = (results: any) => {
-    // Save results here
     console.log('Test results:', results);
 
     if (currentTestIndex < tests.length - 1) {
-      // Move to next test
       setCurrentTestIndex(currentTestIndex + 1);
     } else {
-      // All tests completed
       router.push(`/participants/${participantId}`);
     }
   };
@@ -34,8 +36,24 @@ export default function TestScreen() {
   const CurrentTest = tests[currentTestIndex].component;
 
   return (
-    <View className="flex-1">
+    <SafeAreaView className="flex-1 bg-neutral-50">
+      <Header
+        title={tests[currentTestIndex].name}
+        showBack={false}
+        testProgress={{
+          current: currentTestIndex + 1,
+          total: tests.length
+        }}
+        rightElement={
+          <TouchableOpacity 
+            onPress={handleQuitTest}
+            className="py-2 px-4"
+          >
+            <Text className="text-red-500 font-medium">Quit</Text>
+          </TouchableOpacity>
+        }
+      />
       <CurrentTest onComplete={handleTestComplete} />
-    </View>
+    </SafeAreaView>
   );
 }

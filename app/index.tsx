@@ -3,6 +3,7 @@ import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from 'react-na
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+
 const GroupCard = ({ group }: { group: any }) => (
   <Link
     href={`/groups/${group.id}`}
