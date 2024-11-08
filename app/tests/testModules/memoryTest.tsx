@@ -56,7 +56,7 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
   const generateSequence = () => {
     const newSequence: number[] = [];
     while (newSequence.length < currentLength) {
-      const num = Math.floor(Math.random() * 9);
+      const num = Math.floor(Math.random() * 25);
       if (!newSequence.includes(num)) {
         newSequence.push(num);
       }
@@ -76,7 +76,7 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
             setHighlightedIndex(null);
             resolve(null);
           }, 500);
-        }, 1000);
+        }, 500);
       });
     }
     setIsShowingSequence(false);
@@ -169,7 +169,7 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
         : "Repeat the sequence!"}
     </Text>
       <View style={styles.grid}>
-        {Array(9).fill(null).map((_, index) => {
+        {Array(25).fill(null).map((_, index) => {
           const sequencePosition = userSequence.indexOf(index);
           const isCorrect = sequencePosition !== -1 && sequence[sequencePosition] === index;
           return (
@@ -191,7 +191,7 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
 
 const { width } = Dimensions.get('window');
 const GRID_SIZE = width * 0.9;
-const SQUARE_SIZE = GRID_SIZE / 3;
+const SQUARE_SIZE = GRID_SIZE / 5;
 
 const styles = StyleSheet.create({
   container: {
