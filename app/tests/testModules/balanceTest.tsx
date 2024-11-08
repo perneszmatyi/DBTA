@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import TestIntro from '@/components/TestIntro';
 
 type BalanceTestProps = {
@@ -46,13 +47,26 @@ const BalanceTest = ({ onComplete }: BalanceTestProps) => {
 
   if (testFinished) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Test Completed!</Text>
+      <View className="flex-1 bg-neutral-50 items-center justify-center px-6">
+        <View className="items-center mb-8">
+          <View className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4">
+            <Ionicons name="checkmark-circle" size={32} color="#22C55E" />
+          </View>
+          <Text className="text-2xl font-semibold text-neutral-900 text-center mb-2">
+            Test Completed!
+          </Text>
+          <Text className="text-neutral-500 text-center">
+            Great job staying still
+          </Text>
+        </View>
+
         <TouchableOpacity 
-          style={styles.button}
           onPress={handleComplete}
+          className="bg-primary-500 py-4 px-6 rounded-lg shadow-sm w-full"
         >
-          <Text style={styles.buttonText}>Continue to Next Test</Text>
+          <Text className="text-white font-semibold text-lg text-center">
+            Continue
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -61,63 +75,52 @@ const BalanceTest = ({ onComplete }: BalanceTestProps) => {
   if (!testStarted) {
     return (
       <TestIntro
-        title="Testing Balance"
-        description="Hold your phone steady against your chest while standing:"
-        instructions={["Stand with feet together", "Hold phone flat against chest", "Stay as still as possible for 10 seconds"]}
+        title="Balance Test"
+        description="Test your postural stability and balance control"
+        instructions={[
+          "Stand with your feet together",
+          "Hold your phone flat against your chest",
+          "Stay as still as possible for 10 seconds",
+          "Try not to sway or move during the test"
+        ]}
         onStart={startTest}
       />
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Testing Balance</Text>
-      <Text style={styles.timer}>{timeLeft}</Text>
-      {/* TODO: Add real-time feedback components */}
+    <View className="flex-1 bg-neutral-50 items-center justify-center px-6">
+      {/* Status */}
+      <View className="items-center mb-12">
+        <Text className="text-2xl font-semibold text-neutral-900 mb-2">
+          Stay Still
+        </Text>
+        <Text className="text-neutral-500 text-center">
+          Hold this position
+        </Text>
+      </View>
+
+      {/* Timer */}
+      <View className="w-32 h-32 rounded-full bg-white shadow-sm items-center justify-center mb-12">
+        <Text className="text-5xl font-bold text-primary-500">
+          {timeLeft}
+        </Text>
+        <Text className="text-neutral-500 mt-1">
+          seconds
+        </Text>
+      </View>
+
+      {/* Instructions */}
+      <View className="bg-white rounded-lg p-4 shadow-sm">
+        <View className="flex-row items-center">
+          <Ionicons name="information-circle" size={24} color="#6B7280" />
+          <Text className="text-neutral-600 ml-2">
+            Keep the phone steady against your chest
+          </Text>
+        </View>
+      </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    color: '#6b46c1',
-  },
-  description: {
-    fontSize: 18,
-    marginBottom: 32,
-    textAlign: 'center',
-    lineHeight: 24,
-    color: '#4a5568',
-  },
-  button: {
-    backgroundColor: '#6b46c1',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    elevation: 2,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  timer: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#6b46c1',
-    marginVertical: 20,
-  },
-});
 
 export default BalanceTest;

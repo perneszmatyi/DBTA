@@ -118,20 +118,31 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
   }
 
   return (
-    <View className="flex-1">
-      <Text className="text-2xl text-center mt-12">
-        {testState === 'waiting' ? 'Wait...' : 
-         testState === 'tapping' ? 'Tap!' :
-         testState === 'completed' ? 'Test completed!' : ''}
-      </Text>
+    <View className="flex-1 bg-neutral-50">
+      {/* Status Text */}
+      <View className="absolute top-0 left-0 right-0 z-10 py-8 items-center">
+        <Text className={`text-2xl font-semibold ${
+          testState === 'waiting' ? 'text-neutral-600' :
+          testState === 'tapping' ? 'text-primary-500' : 'text-neutral-900'
+        }`}>
+          {testState === 'waiting' ? 'Wait...' : 
+           testState === 'tapping' ? 'Tap!' : ''}
+        </Text>
+        
+        {/* Trial Counter */}
+        <Text className="text-sm text-neutral-500 mt-2">
+          Trial {trials.length + 1} of {totalTrials}
+        </Text>
+      </View>
       
-      <View className="flex-1 flex-row mt-8">
+      {/* Tap Areas */}
+      <View className="flex-1 flex-row">
         <TouchableOpacity 
-          className={`flex-1 border-r border-gray-400 ${
+          className={`flex-1 ${
             testState === 'tapping' && currentTrial?.side === 'left' && showColor
               ? `bg-${currentTrial.type === 'green' ? 'green' : 'red'}-500`
-              : 'bg-gray-100'
-          }`}
+              : 'bg-neutral-100'
+          } active:bg-neutral-200`}
           onPress={() => handlePress('left')}
           disabled={testState !== 'tapping'}
         />
@@ -139,8 +150,8 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
           className={`flex-1 ${
             testState === 'tapping' && currentTrial?.side === 'right' && showColor
               ? `bg-${currentTrial.type === 'green' ? 'green' : 'red'}-500`
-              : 'bg-gray-100'
-          }`}
+              : 'bg-neutral-100'
+          } active:bg-neutral-200`}
           onPress={() => handlePress('right')}
           disabled={testState !== 'tapping'}
         />

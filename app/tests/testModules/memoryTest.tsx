@@ -56,7 +56,7 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
   const generateSequence = () => {
     const newSequence: number[] = [];
     while (newSequence.length < currentLength) {
-      const num = Math.floor(Math.random() * 25);
+      const num = Math.floor(Math.random() * 16);
       if (!newSequence.includes(num)) {
         newSequence.push(num);
       }
@@ -162,36 +162,49 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.statusText}>
-      {isShowingSequence 
-        ? "Watch the sequence..." 
-        : "Repeat the sequence!"}
-    </Text>
+    <View className="flex-1 bg-neutral-50 items-center justify-center px-4">
+      {/* Status Text */}
+      <View className="mb-8">
+        <Text className={`text-2xl font-semibold text-center mb-2 ${
+          isShowingSequence ? 'text-primary-500' : 'text-neutral-900'
+        }`}>
+          {isShowingSequence ? "Watch the sequence..." : "Repeat the sequence!"}
+        </Text>
+        <Text className="text-neutral-500 text-center">
+          Level {currentLength - 3} of 3
+        </Text>
+      </View>
+
+      {/* Grid */}
       <View style={styles.grid}>
-        {Array(25).fill(null).map((_, index) => {
+        {Array(16).fill(null).map((_, index) => {
           const sequencePosition = userSequence.indexOf(index);
           const isCorrect = sequencePosition !== -1 && sequence[sequencePosition] === index;
           return (
-          <Square
-            key={index}
-            index={index}
-            isHighlighted={highlightedIndex === index}
-            onPress={handleSquarePress}
-            disabled={isShowingSequence}
-            isPressed={userSequence.includes(index)}
-            isCorrect={isCorrect}
+            <Square
+              key={index}
+              index={index}
+              isHighlighted={highlightedIndex === index}
+              onPress={handleSquarePress}
+              disabled={isShowingSequence}
+              isPressed={userSequence.includes(index)}
+              isCorrect={isCorrect}
             />
           );
         })}
       </View>
+
+      {/* Progress Text */}
+      <Text className="text-neutral-500 text-center mt-8">
+        {userSequence.length} / {sequence.length} squares selected
+      </Text>
     </View>
   );
 };
 
 const { width } = Dimensions.get('window');
 const GRID_SIZE = width * 0.9;
-const SQUARE_SIZE = GRID_SIZE / 5;
+const SQUARE_SIZE = (GRID_SIZE - 60) / 4;
 
 const styles = StyleSheet.create({
   container: {
@@ -204,30 +217,47 @@ const styles = StyleSheet.create({
     height: GRID_SIZE,
     flexDirection: 'row',
     flexWrap: 'wrap',
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   square: {
     width: SQUARE_SIZE,
     height: SQUARE_SIZE,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#E5E7EB',
     backgroundColor: '#fff',
+    margin: 3.4,
+    borderRadius: 8,
   },
   highlighted: {
-    backgroundColor: '#0000FF',
+    backgroundColor: '#2563EB', // primary-500
+    borderColor: '#2563EB',
   },
   startText: {
     fontSize: 24,
     textAlign: 'center',
+    fontWeight: '600',
+    color: '#111827', // neutral-900
   },
   correctPress: {
-    backgroundColor: '#4CAF50',  
+    backgroundColor: '#22C55E', // green-500
+    borderColor: '#22C55E',
   },
   wrongPress: {
-    backgroundColor: '#f44336',  
+    backgroundColor: '#EF4444', // red-500
+    borderColor: '#EF4444',
   },
   statusText: {
     fontSize: 24,
     textAlign: 'center',
+    fontWeight: '600',
+    color: '#111827', // neutral-900
   }
 });
 
