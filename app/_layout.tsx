@@ -17,22 +17,19 @@ export default function RootLayout() {
       <Stack.Screen 
         name="groups/[id]" 
         options={{ 
-          headerTitle: "Group Details",
-          headerBackTitle: "Home"
+          headerShown: false
         }} 
       />
       <Stack.Screen 
         name="participants/[id]" 
         options={{ 
-          headerTitle: "Participant Details",
-          headerBackTitle: "Home"
+            headerShown: false
         }} 
       />
       <Stack.Screen 
         name="tests/[participantId]" 
         options={{ 
-          headerTitle: "Test",
-          headerBackTitle: "Back"
+            headerShown: false
         }} 
       />
     </Stack>

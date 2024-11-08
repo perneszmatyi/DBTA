@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions, Text } from 'react-native';
 import TestIntro from '@/components/TestIntro';
+import TestComplete from '@/components/TestComplete';
 
 type MemoryTestProps = {
   onComplete: (results: {
@@ -38,10 +39,9 @@ const Square = ({
 
 const MemoryTest = ({ onComplete }: MemoryTestProps) => {
   // Test state
-  const [testStarted, setTestStarted] = useState(false);
+  const [testState, setTestState] = useState<'intro' | 'showing' | 'input' | 'completed'>('intro');
   const [sequence, setSequence] = useState<number[]>([]);
   const [userSequence, setUserSequence] = useState<number[]>([]);
-  const [isShowingSequence, setIsShowingSequence] = useState(false);
   const [currentLength, setCurrentLength] = useState(4);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   
@@ -67,7 +67,7 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
 
   // Show sequence to user
   const showSequence = async (newSequence: number[]) => {
-    setIsShowingSequence(true);
+    setTestState('showing');
     for (let i = 0; i < newSequence.length; i++) {
       await new Promise(resolve => {
         setTimeout(() => {
@@ -79,15 +79,14 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
         }, 500);
       });
     }
-    setIsShowingSequence(false);
+    setTestState('input');
     setLastTapTime(Date.now());
   };
 
   // Handle user taps
   const handleSquarePress = (index: number) => {
-    if (isShowingSequence) return;
+    if (testState === 'showing') return;
 
-    
     const currentTime = Date.now();
     if (lastTapTime) {
       setResponseTimes(prev => [...prev, currentTime - lastTapTime]);
@@ -121,31 +120,18 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
       const newSequence = generateSequence();
       setTimeout(() => showSequence(newSequence), 1000);
     } else {
-      endTest();
+      setTestState('completed');
     }
-  };
-
-  // End test and calculate results
-  const endTest = () => {
-    const avgResponseTime = responseTimes.length > 0
-      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
-      : 0;
-
-    onComplete({
-      correctSequences,
-      averageResponseTime: avgResponseTime,
-      totalErrors,
-    });
   };
 
   // Start test
   const startTest = () => {
-    setTestStarted(true);
+    setTestState('showing');
     const newSequence = generateSequence();
     showSequence(newSequence);
   };
 
-  if (!testStarted) {
+  if (testState === 'intro') {
     return (
       <TestIntro
         title="Memory Test"
@@ -161,14 +147,29 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
     );
   }
 
+  if (testState === 'completed') {
+    const avgResponseTime = Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length);
+    return (
+      <TestComplete
+        title="Memory Test Complete!"
+        message={`You got ${correctSequences} out of ${maxSequenceLength} correct`}
+        onComplete={() => {onComplete({
+          correctSequences,
+          averageResponseTime: avgResponseTime,
+          totalErrors,
+        })}}
+      />
+    );
+  }
+
   return (
     <View className="flex-1 bg-neutral-50 items-center justify-center px-4">
       {/* Status Text */}
       <View className="mb-8">
         <Text className={`text-2xl font-semibold text-center mb-2 ${
-          isShowingSequence ? 'text-primary-500' : 'text-neutral-900'
+          testState === 'showing' ? 'text-primary-500' : 'text-neutral-900'
         }`}>
-          {isShowingSequence ? "Watch the sequence..." : "Repeat the sequence!"}
+          {testState === 'showing' ? "Watch the sequence..." : "Repeat the sequence!"}
         </Text>
         <Text className="text-neutral-500 text-center">
           Level {currentLength - 3} of 3
@@ -186,7 +187,7 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
               index={index}
               isHighlighted={highlightedIndex === index}
               onPress={handleSquarePress}
-              disabled={isShowingSequence}
+              disabled={testState === 'showing'}
               isPressed={userSequence.includes(index)}
               isCorrect={isCorrect}
             />

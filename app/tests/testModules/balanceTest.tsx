@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Accelerometer, AccelerometerMeasurement } from 'expo-sensors';
 import TestIntro from '@/components/TestIntro';
 
 type BalanceTestProps = {
@@ -15,7 +16,17 @@ const BalanceTest = ({ onComplete }: BalanceTestProps) => {
   const [testStarted, setTestStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10);
   const [testFinished, setTestFinished] = useState(false);
+  const [readings, setReadings] = useState<AccelerometerMeasurement[]>([]);
+  const [baselineReading, setBaselineReading] = useState<AccelerometerMeasurement | null>(null);
 
+  // Cleanup function for accelerometer
+  useEffect(() => {
+    return () => {
+      Accelerometer.removeAllListeners();
+    };
+  }, []);
+
+  // Timer effect
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (testStarted && timeLeft > 0) {
@@ -23,26 +34,82 @@ const BalanceTest = ({ onComplete }: BalanceTestProps) => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
     } else if (timeLeft === 0 && testStarted) {
-      setTestFinished(true);
+      handleTestFinish();
     }
     return () => {
       if (timer) clearTimeout(timer);
     };
   }, [testStarted, timeLeft]);
 
+  const calculateDeviation = (
+    current: AccelerometerMeasurement,
+    baseline: AccelerometerMeasurement
+  ): number => {
+    return Math.sqrt(
+      Math.pow(current.x - baseline.x, 2) +
+      Math.pow(current.y - baseline.y, 2) +
+      Math.pow(current.z - baseline.z, 2)
+    );
+  };
+
+  const startAccelerometer = () => {
+    Accelerometer.setUpdateInterval(100); // 10 readings per second
+
+    // Start collecting readings
+    Accelerometer.addListener((reading: AccelerometerMeasurement) => {
+      setReadings(prev => [...prev, reading]);
+      
+      // Set baseline after first reading if not set
+      if (!baselineReading) {
+        setBaselineReading(reading);
+      }
+    });
+  };
+
+  const stopAccelerometer = () => {
+    Accelerometer.removeAllListeners();
+  };
+
+  const handleTestFinish = () => {
+    stopAccelerometer();
+    setTestFinished(true);
+  };
+
+  const calculateResults = () => {
+    if (!baselineReading || readings.length === 0) {
+      return {
+        averageDeviation: 0,
+        maxDeviation: 0,
+        testDuration: 10
+      };
+    }
+
+    const deviations = readings.map(reading => 
+      calculateDeviation(reading, baselineReading)
+    );
+
+    const averageDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length;
+    const maxDeviation = Math.max(...deviations);
+
+    return {
+      averageDeviation,
+      maxDeviation,
+      testDuration: 10
+    };
+  };
+
   const startTest = () => {
     setTestStarted(true);
     setTimeLeft(10);
     setTestFinished(false);
-    // TODO: Start accelerometer data collection
+    setReadings([]);
+    setBaselineReading(null);
+    startAccelerometer();
   };
 
   const handleComplete = () => {
-    onComplete({
-      averageDeviation: 0,
-      maxDeviation: 0,
-      testDuration: 10
-    });
+    const results = calculateResults();
+    onComplete(results);
   };
 
   if (testFinished) {

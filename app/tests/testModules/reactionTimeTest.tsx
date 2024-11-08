@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import TestIntro from '@/components/TestIntro';
+import TestComplete from '@/components/TestComplete';
 
 type Trial = {
   type: 'green' | 'red';
@@ -34,11 +35,6 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
     if (trials.length === totalTrials) {
       const averageTime = trials.reduce((sum, trial) => sum + trial.responseTime, 0) / totalTrials;
       const correctTaps = trials.filter(trial => trial.correct).length;
-      onComplete({ 
-        averageTime, 
-        correctTaps,
-        individualTrials: trials 
-      }); 
     } else if (testState === 'waiting') {
       const newTrial: Trial = {
         type: Math.random() > 0.5 ? 'green' : 'red',
@@ -88,19 +84,24 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
     }
   };
 
-  const handleComplete = () => {
-    const averageTime = trials.reduce((sum, trial) => sum + trial.responseTime, 0) / totalTrials;
-    const correctTaps = trials.filter(trial => trial.correct).length;
-    
-    onComplete({ 
-      averageTime, 
-      correctTaps,
-      individualTrials: trials 
-    });
-  };
+ 
 
   
-
+  if (testState === 'completed') {
+    const averageTime = Math.round(trials.reduce((sum, trial) => sum + trial.responseTime, 0) / totalTrials);
+    const correctTaps = trials.filter(trial => trial.correct).length;
+    return (
+      <TestComplete
+        title="Reaction Time Test Complete!"
+        message={`You got ${correctTaps} out of ${totalTrials} correct with an average time of ${averageTime}ms`}
+        onComplete={() => {onComplete({
+          averageTime, 
+          correctTaps,
+          individualTrials: trials 
+        })}}
+      />
+    );
+  }
   if (testState === 'ready') {
     return (
       <TestIntro
@@ -138,20 +139,22 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
       {/* Tap Areas */}
       <View className="flex-1 flex-row">
         <TouchableOpacity 
-          className={`flex-1 ${
-            testState === 'tapping' && currentTrial?.side === 'left' && showColor
-              ? `bg-${currentTrial.type === 'green' ? 'green' : 'red'}-500`
-              : 'bg-neutral-100'
-          } active:bg-neutral-200`}
+          style={{
+            flex: 1,
+            backgroundColor: testState === 'tapping' && currentTrial?.side === 'left' && showColor
+              ? currentTrial.type === 'green' ? '#22c55e' : '#ef4444'
+              : '#f5f5f5'
+          }}
           onPress={() => handlePress('left')}
           disabled={testState !== 'tapping'}
         />
         <TouchableOpacity 
-          className={`flex-1 ${
-            testState === 'tapping' && currentTrial?.side === 'right' && showColor
-              ? `bg-${currentTrial.type === 'green' ? 'green' : 'red'}-500`
-              : 'bg-neutral-100'
-          } active:bg-neutral-200`}
+          style={{
+            flex: 1,
+            backgroundColor: testState === 'tapping' && currentTrial?.side === 'right' && showColor
+              ? currentTrial.type === 'green' ? '#22c55e' : '#ef4444'
+              : '#f5f5f5'
+          }}
           onPress={() => handlePress('right')}
           disabled={testState !== 'tapping'}
         />
