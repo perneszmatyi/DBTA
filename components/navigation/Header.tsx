@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 type HeaderProps = {
   title?: string;
+  path?: () => void;
   showBack?: boolean;
   rightElement?: React.ReactNode;
   testProgress?: {
@@ -15,6 +16,7 @@ type HeaderProps = {
 
 export default function Header({ 
   title, 
+  path = () => router.back(),
   showBack = true, 
   rightElement,
   testProgress 
@@ -26,7 +28,7 @@ export default function Header({
       <View className="flex-row items-center flex-1">
         {showBack && (
           <TouchableOpacity 
-            onPress={() => router.back()}
+            onPress={path}
             className="mr-2"
           >
             <Ionicons name="chevron-back" size={24} color="#404040" />

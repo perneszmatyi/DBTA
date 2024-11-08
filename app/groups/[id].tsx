@@ -63,7 +63,10 @@ export default function GroupDetailsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
-      <Header title="Group Details" />
+      <Header 
+        title="Group Details" 
+        path={() => router.replace(`/`)}
+      />
       <View className="flex-1 px-4">
         {/* Header */}
         <View className="py-6">

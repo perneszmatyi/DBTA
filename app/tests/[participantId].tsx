@@ -39,6 +39,7 @@ export default function TestScreen() {
     <SafeAreaView className="flex-1 bg-neutral-50">
       <Header
         title={tests[currentTestIndex].name}
+        path={() => router.replace(`/participants/${participantId}`)}
         showBack={false}
         testProgress={{
           current: currentTestIndex + 1,
