@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import CreateGroupModal from '@/components/CreateGroupModal';
 
 
-const GroupCard = ({ group }: { group: any }) => (
-  <Link
+const GroupCard = ({ group }: { group: any }) => {
+  return (
+    <Link
     href={`/groups/${group.id}`}
     asChild
-  >
+    >
     <TouchableOpacity className="mb-4 bg-white rounded-lg shadow-sm overflow-hidden">
       <View className="p-4">
         <View className="flex-row justify-between items-center mb-2">
@@ -29,10 +31,12 @@ const GroupCard = ({ group }: { group: any }) => (
         </View>
       </View>
     </TouchableOpacity>
-  </Link>
-);
+    </Link>
+  );
+};
 
 export default function HomeScreen() {
+  const [isCreateGroupModalVisible, setIsCreateGroupModalVisible] = useState(false);
   const groups = [
     { 
       id: 1, 
@@ -81,12 +85,17 @@ export default function HomeScreen() {
 
         {/* Create Group Button */}
         <TouchableOpacity
-          onPress={handleCreateNewGroup}
+          onPress={() => setIsCreateGroupModalVisible(true)}
           className="bg-primary-500 mx-4 mb-6 p-4 rounded-lg shadow-sm flex-row justify-center items-center"
         >
           <Ionicons name="add-circle-outline" size={24} color="white" />
           <Text className="font-semibold text-white text-lg ml-2">Create New Group</Text>
         </TouchableOpacity>
+        <CreateGroupModal 
+          isVisible={isCreateGroupModalVisible}
+          onClose={() => setIsCreateGroupModalVisible(false)}
+          onSubmit={handleCreateNewGroup}
+        />
       </View>
     </SafeAreaView>
   );

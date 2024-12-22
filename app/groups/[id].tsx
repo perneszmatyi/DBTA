@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@/components/navigation/Header';
+import AddParticipantModal from '@/components/AddparticipantModal';
 
 type Participant = {
   id: string;
@@ -46,11 +47,13 @@ const ParticipantListItem = ({ participant, onPress }: { participant: Participan
 export default function GroupDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const [isAddParticipantModalVisible, setIsAddParticipantModalVisible] = useState(false);
 
   const participants: Participant[] = [
     { id: '1', name: 'Alice', age: 25, hasCompletedTest: true },
     { id: '2', name: 'Bob', age: 30, hasCompletedTest: false },
     { id: '3', name: 'Charlie', age: 22, hasCompletedTest: true },
+    { id: '4', name: 'Diana', age: 28, hasCompletedTest: false },
   ];
 
   const handleAddParticipant = () => {
@@ -112,12 +115,17 @@ export default function GroupDetailsScreen() {
 
         {/* Add Participant Button */}
         <TouchableOpacity
-          onPress={handleAddParticipant}
+          onPress={() => setIsAddParticipantModalVisible(true)}
           className="bg-primary-500 mx-4 mb-6 p-4 rounded-lg shadow-sm flex-row justify-center items-center"
         >
           <Ionicons name="add-circle-outline" size={24} color="white" />
           <Text className="font-semibold text-white text-lg ml-2">Add Participant</Text>
         </TouchableOpacity>
+        <AddParticipantModal
+          isVisible={isAddParticipantModalVisible}
+          onClose={() => setIsAddParticipantModalVisible(false)}
+          onSubmit={handleAddParticipant}
+        />  
       </View>
     </SafeAreaView>
   );
