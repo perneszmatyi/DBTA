@@ -1,193 +1,217 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import { Accelerometer } from 'expo-sensors';
 import { Ionicons } from '@expo/vector-icons';
-import { Accelerometer, AccelerometerMeasurement } from 'expo-sensors';
+import { useTestContext } from '@/context/TestContext';
 import TestIntro from '@/components/TestIntro';
+import TestComplete from '@/components/TestComplete';
 
-type BalanceTestProps = {
-  onComplete: (results: {
-    averageDeviation: number;
-    maxDeviation: number;
-    testDuration: number;
-  }) => void;
+type ThreeAxisMeasurement = {
+  x: number;
+  y: number;
+  z: number;
 };
 
-const BalanceTest = ({ onComplete }: BalanceTestProps) => {
-  const [testStarted, setTestStarted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [testFinished, setTestFinished] = useState(false);
-  const [readings, setReadings] = useState<AccelerometerMeasurement[]>([]);
-  const [baselineReading, setBaselineReading] = useState<AccelerometerMeasurement | null>(null);
+const TEST_DURATION = 10000; // 10 seconds in milliseconds
+const SAMPLE_RATE = 100; // Sample rate in milliseconds
 
-  // Cleanup function for accelerometer
+type AccelerometerReading = ThreeAxisMeasurement & {
+  timestamp: number;
+};
+
+type BalanceTestProps = {
+  onComplete: (results: any) => void;
+};
+
+export default function BalanceTest({ onComplete }: BalanceTestProps) {
+  const [testState, setTestState] = useState<'intro' | 'countdown' | 'testing' | 'completed'>('intro');
+  const [countdown, setCountdown] = useState(3);
+  const [timeLeft, setTimeLeft] = useState(TEST_DURATION / 1000);
+  const [readings, setReadings] = useState<AccelerometerReading[]>([]);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const { updateBalanceResults } = useTestContext();
+
+  // Check accelerometer availability
   useEffect(() => {
-    return () => {
-      Accelerometer.removeAllListeners();
-    };
+    checkAvailability();
   }, []);
 
-  // Timer effect
+  const checkAvailability = async () => {
+    const isAccelerometerAvailable = await Accelerometer.isAvailableAsync();
+    setIsAvailable(isAccelerometerAvailable);
+    if (!isAccelerometerAvailable) {
+      Alert.alert(
+        "Sensor Not Available",
+        "The accelerometer sensor is not available on this device. The balance test cannot be performed.",
+        [{ text: "OK", onPress: () => onComplete(null) }]
+      );
+    }
+  };
+
+  // Subscribe to accelerometer when test starts
+  useEffect(() => {
+    let subscription: ReturnType<typeof Accelerometer.addListener> | null = null;
+
+    const startAccelerometer = async () => {
+      try {
+        await Accelerometer.setUpdateInterval(SAMPLE_RATE);
+        subscription = Accelerometer.addListener(accelerometerData => {
+          if (testState === 'testing') {
+            const reading: AccelerometerReading = {
+              ...accelerometerData,
+              timestamp: Date.now()
+            };
+            setReadings(prev => [...prev, reading]);
+          }
+        });
+      } catch (error) {
+        console.error('Error setting up accelerometer:', error);
+        Alert.alert(
+          "Sensor Error",
+          "There was an error accessing the accelerometer. Please try again.",
+          [{ text: "OK", onPress: () => onComplete(null) }]
+        );
+      }
+    };
+
+    if (testState === 'testing' && isAvailable) {
+      startAccelerometer();
+    }
+
+    return () => {
+      if (subscription) {
+        subscription.remove();
+      }
+    };
+  }, [testState, isAvailable]);
+
+  // Handle countdown
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (testStarted && timeLeft > 0) {
-      timer = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && testStarted) {
-      handleTestFinish();
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [testStarted, timeLeft]);
 
-  const calculateDeviation = (
-    current: AccelerometerMeasurement,
-    baseline: AccelerometerMeasurement
-  ): number => {
-    return Math.sqrt(
-      Math.pow(current.x - baseline.x, 2) +
-      Math.pow(current.y - baseline.y, 2) +
-      Math.pow(current.z - baseline.z, 2)
-    );
-  };
-
-  const startAccelerometer = () => {
-    Accelerometer.setUpdateInterval(100); // 10 readings per second
-
-    // Start collecting readings
-    Accelerometer.addListener((reading: AccelerometerMeasurement) => {
-      setReadings(prev => [...prev, reading]);
-      
-      // Set baseline after first reading if not set
-      if (!baselineReading) {
-        setBaselineReading(reading);
-      }
-    });
-  };
-
-  const stopAccelerometer = () => {
-    Accelerometer.removeAllListeners();
-  };
-
-  const handleTestFinish = () => {
-    stopAccelerometer();
-    setTestFinished(true);
-  };
-
-  const calculateResults = () => {
-    if (!baselineReading || readings.length === 0) {
-      return {
-        averageDeviation: 0,
-        maxDeviation: 0,
-        testDuration: 10
-      };
+    if (testState === 'countdown' && countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    } else if (testState === 'countdown' && countdown === 0) {
+      setTestState('testing');
+      setTimeLeft(TEST_DURATION / 1000);
     }
 
+    return () => clearTimeout(timer);
+  }, [countdown, testState]);
+
+  // Handle test duration
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (testState === 'testing' && timeLeft > 0) {
+      timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+    } else if (testState === 'testing' && timeLeft === 0) {
+      handleTestComplete();
+    }
+
+    return () => clearTimeout(timer);
+  }, [timeLeft, testState]);
+
+  const handleTestComplete = () => {
+    if (readings.length === 0) {
+      Alert.alert(
+        "Test Error",
+        "No movement data was recorded. Please try again.",
+        [{ text: "OK", onPress: () => onComplete(null) }]
+      );
+      return;
+    }
+
+    // Calculate results
     const deviations = readings.map(reading => 
-      calculateDeviation(reading, baselineReading)
+      Math.sqrt(
+        Math.pow(reading.x, 2) + 
+        Math.pow(reading.y, 2) + 
+        Math.pow(reading.z, 2)
+      )
     );
 
-    const averageDeviation = deviations.reduce((a, b) => a + b, 0) / deviations.length;
-    const maxDeviation = Math.max(...deviations);
-
-    return {
-      averageDeviation,
-      maxDeviation,
-      testDuration: 10
+    const results = {
+      averageDeviation: deviations.reduce((a, b) => a + b, 0) / deviations.length,
+      maxDeviation: Math.max(...deviations),
+      testDuration: TEST_DURATION / 1000
     };
-  };
 
-  const startTest = () => {
-    setTestStarted(true);
-    setTimeLeft(10);
-    setTestFinished(false);
-    setReadings([]);
-    setBaselineReading(null);
-    startAccelerometer();
-  };
-
-  const handleComplete = () => {
-    const results = calculateResults();
+    updateBalanceResults(results);
+    setTestState('completed');
     onComplete(results);
   };
 
-  if (testFinished) {
-    return (
-      <View className="flex-1 bg-neutral-50 items-center justify-center px-6">
-        <View className="items-center mb-8">
-          <View className="w-16 h-16 bg-green-100 rounded-full items-center justify-center mb-4">
-            <Ionicons name="checkmark-circle" size={32} color="#22C55E" />
-          </View>
-          <Text className="text-2xl font-semibold text-neutral-900 text-center mb-2">
-            Test Completed!
-          </Text>
-          <Text className="text-neutral-500 text-center">
-            Great job staying still
-          </Text>
-        </View>
+  const startTest = () => {
+    if (!isAvailable) {
+      Alert.alert(
+        "Cannot Start Test",
+        "The accelerometer is not available on this device.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+    setTestState('countdown');
+    setCountdown(3);
+    setReadings([]);
+  };
 
-        <TouchableOpacity 
-          onPress={handleComplete}
-          className="bg-primary-500 py-4 px-6 rounded-lg shadow-sm w-full"
-        >
-          <Text className="text-white font-semibold text-lg text-center">
-            Continue
-          </Text>
-        </TouchableOpacity>
+  if (!isAvailable) {
+    return (
+      <View className="flex-1 justify-center items-center bg-neutral-50 p-4">
+        <Ionicons name="warning-outline" size={48} color="#EF4444" />
+        <Text className="text-xl text-neutral-900 text-center mt-4">
+          Accelerometer Not Available
+        </Text>
+        <Text className="text-neutral-500 text-center mt-2">
+          This device does not support the balance test.
+        </Text>
       </View>
     );
   }
 
-  if (!testStarted) {
+  if (testState === 'intro') {
     return (
       <TestIntro
         title="Balance Test"
-        description="Test your postural stability and balance control"
-        instructions={[
-          "Stand with your feet together",
-          "Hold your phone flat against your chest",
-          "Stay as still as possible for 10 seconds",
-          "Try not to sway or move during the test"
-        ]}
+        description="Hold your phone as still as possible for 10 seconds. Keep your feet together and eyes closed."
+        instructions={["Hold your phone as still as possible for 10 seconds.", "Keep your feet together and eyes closed."]}
         onStart={startTest}
       />
     );
   }
 
+  if (testState === 'completed') {
+    return (
+      <TestComplete
+        title="Balance Test Complete"
+        message="Great job! Your balance data has been recorded."
+        onComplete={() => onComplete(null)}
+      />
+    );
+  }
+
   return (
-    <View className="flex-1 bg-neutral-50 items-center justify-center px-6">
-      {/* Status */}
-      <View className="items-center mb-12">
-        <Text className="text-2xl font-semibold text-neutral-900 mb-2">
-          Stay Still
-        </Text>
-        <Text className="text-neutral-500 text-center">
-          Hold this position
-        </Text>
-      </View>
-
-      {/* Timer */}
-      <View className="w-32 h-32 rounded-full bg-white shadow-sm items-center justify-center mb-12">
-        <Text className="text-5xl font-bold text-primary-500">
-          {timeLeft}
-        </Text>
-        <Text className="text-neutral-500 mt-1">
-          seconds
-        </Text>
-      </View>
-
-      {/* Instructions */}
-      <View className="bg-white rounded-lg p-4 shadow-sm">
-        <View className="flex-row items-center">
-          <Ionicons name="information-circle" size={24} color="#6B7280" />
-          <Text className="text-neutral-600 ml-2">
-            Keep the phone steady against your chest
+    <View className="flex-1 justify-center items-center bg-neutral-50 p-4">
+      {testState === 'countdown' ? (
+        <View className="items-center">
+          <Text className="text-6xl font-bold text-primary-500 mb-4">{countdown}</Text>
+          <Text className="text-xl text-neutral-600">Get ready...</Text>
+        </View>
+      ) : (
+        <View className="items-center">
+          <View className="w-32 h-32 rounded-full bg-primary-100 items-center justify-center mb-8">
+            <Text className="text-4xl font-bold text-primary-500">{timeLeft}</Text>
+            <Text className="text-neutral-500">seconds</Text>
+          </View>
+          <Text className="text-xl text-neutral-600 text-center mb-4">
+            Stand still with your feet together
+          </Text>
+          <Text className="text-neutral-500 text-center">
+            Keep your eyes closed and try not to move
           </Text>
         </View>
-      </View>
+      )}
     </View>
   );
-};
-
-export default BalanceTest;
+}
