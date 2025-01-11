@@ -7,32 +7,41 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { GroupProvider } from '@/context/GroupContext';
+import { ParticipantProvider } from '@/context/ParticipantContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
+
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen 
-        name="groups/[id]" 
-        options={{ 
-          headerShown: false
-        }} 
-      />
-      <Stack.Screen 
-        name="participants/[id]" 
-        options={{ 
-            headerShown: false
-        }} 
-      />
-      <Stack.Screen 
-        name="tests/[participantId]" 
-        options={{ 
-            headerShown: false
-        }} 
-      />
-    </Stack>
-    
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <GroupProvider>
+        <ParticipantProvider>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="groups/[id]" 
+              options={{ 
+                headerShown: false
+              }} 
+            />
+            <Stack.Screen 
+              name="participants/[id]" 
+              options={{ 
+                  headerShown: false
+              }} 
+            />
+            <Stack.Screen 
+              name="tests/[participantId]" 
+              options={{ 
+                  headerShown: false
+              }} 
+            />
+          </Stack>
+        </ParticipantProvider>
+      </GroupProvider>
+    </ThemeProvider>
   );
 }

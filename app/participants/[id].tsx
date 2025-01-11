@@ -1,23 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@/components/navigation/Header';
-
-
-type Participant = {
-  id: string;
-  name: string;
-  age: number;
-  hasCompletedTest: boolean;
-  lastTestDate?: string;
-  testResults?: {
-    reactionTime: number;
-    memoryScore: number;
-    balanceScore: number;
-    trackingScore: number;
-  };
-};
+import { useParticipantContext } from '@/context/ParticipantContext';
 
 const StatCard = ({ label, value, icon }: { label: string; value: string | number; icon: string }) => (
   <View className="bg-white p-4 rounded-lg shadow-sm">
@@ -31,36 +17,38 @@ const StatCard = ({ label, value, icon }: { label: string; value: string | numbe
 
 export default function ParticipantDetailsScreen() {
   const { id } = useLocalSearchParams();
+  const { currentParticipant, participants } = useParticipantContext();
 
-  // Mock data for the participant
-  const participant: Participant = {
-    id: id as string,
-    name: 'John Doe',
-    age: 28,
-    hasCompletedTest: true,
-    lastTestDate: '2024-02-15',
-    testResults: {
-      reactionTime: 245,
-      memoryScore: 85,
-      balanceScore: 92,
-      trackingScore: 78,
-    },
-  };
+  // Find the participant in the list
+  const participant = participants.find(p => p.id === id) || currentParticipant;
 
-  const handleStartTest = (id: string) => {
-    if (id) {
-      router.push(`/tests/${id}`);
+  const handleStartTest = (participantId: string) => {
+    if (participantId) {
+      router.push(`/tests/${participantId}`);
     } else {
       console.error('Participant ID is undefined');
     }
   };
 
+  if (!participant) {
+    return (
+      <SafeAreaView className="flex-1 bg-neutral-50">
+        <Header 
+          title="Participant Details" 
+          path={() => router.back()}
+        />
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-neutral-500">Participant not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
       <Header 
         title="Participant Details" 
-        path={() => router.replace(`/groups/${id}`)}
+        path={() => router.back()}
       />
       <ScrollView className="flex-1">
         <View className="px-4">
@@ -69,11 +57,13 @@ export default function ParticipantDetailsScreen() {
             <View className="flex-row items-center mb-2">
               <View className="w-12 h-12 bg-primary-100 rounded-full items-center justify-center mr-3">
                 <Text className="text-primary-500 text-xl font-semibold">
-                  {participant.name.charAt(0)}
+                  {participant.firstName.charAt(0)}
                 </Text>
               </View>
               <View>
-                <Text className="text-3xl font-bold text-neutral-900">{participant.name}</Text>
+                <Text className="text-3xl font-bold text-neutral-900">
+                  {`${participant.firstName} ${participant.lastName}`}
+                </Text>
                 <Text className="text-neutral-500">ID: {participant.id}</Text>
               </View>
             </View>
@@ -101,6 +91,18 @@ export default function ParticipantDetailsScreen() {
                 <Text className="text-neutral-900">{participant.age} years</Text>
               </View>
               <View className="flex-row justify-between">
+                <Text className="text-neutral-500">Gender</Text>
+                <Text className="text-neutral-900 capitalize">{participant.gender}</Text>
+              </View>
+              <View className="flex-row justify-between">
+                <Text className="text-neutral-500">Driving Experience</Text>
+                <Text className="text-neutral-900">{participant.drivingExperience} years</Text>
+              </View>
+              <View className="flex-row justify-between">
+                <Text className="text-neutral-500">Intoxication Level</Text>
+                <Text className="text-neutral-900">{participant.intoxicationLevel}</Text>
+              </View>
+              <View className="flex-row justify-between">
                 <Text className="text-neutral-500">Last Test Date</Text>
                 <Text className="text-neutral-900">
                   {participant.lastTestDate ? new Date(participant.lastTestDate).toLocaleDateString() : 'Not tested'}
@@ -108,35 +110,6 @@ export default function ParticipantDetailsScreen() {
               </View>
             </View>
           </View>
-
-          {/* Test Results */}
-          {participant.hasCompletedTest && participant.testResults && (
-            <View className="mb-6">
-              <Text className="text-lg font-semibold text-neutral-900 mb-4">Previous Results</Text>
-              <View className="grid grid-cols-2 gap-3">
-                <StatCard 
-                  label="Reaction Time" 
-                  value={`${participant.testResults.reactionTime}ms`}
-                  icon="flash-outline"
-                />
-                <StatCard 
-                  label="Memory Score" 
-                  value={`${participant.testResults.memoryScore}%`}
-                  icon="cellular-outline"
-                />
-                <StatCard 
-                  label="Balance Score" 
-                  value={participant.testResults.balanceScore}
-                  icon="fitness-outline"
-                />
-                <StatCard 
-                  label="Tracking Score" 
-                  value={participant.testResults.trackingScore}
-                  icon="locate-outline"
-                />
-              </View>
-            </View>
-          )}
         </View>
       </ScrollView>
 

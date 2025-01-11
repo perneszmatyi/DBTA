@@ -3,9 +3,15 @@ import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from 'react-na
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import CreateGroupModal from '@/components/CreateGroupModal';
-
+import { useGroupContext } from '@/context/GroupContext';
+import { Timestamp } from 'firebase/firestore';
 
 const GroupCard = ({ group }: { group: any }) => {
+  const formatDate = (timestamp: Timestamp) => {
+    if (!timestamp) return 'N/A';
+    return timestamp.toDate().toLocaleDateString();
+  };
+
   return (
     <Link
     href={`/groups/${group.id}`}
@@ -26,7 +32,7 @@ const GroupCard = ({ group }: { group: any }) => {
             </Text>
           </View>
           <Text className="text-sm text-neutral-500">
-            Last active: {new Date(group.lastActive).toLocaleDateString()}
+            Created at: {formatDate(group.createdAt)}
           </Text>
         </View>
       </View>
@@ -36,24 +42,16 @@ const GroupCard = ({ group }: { group: any }) => {
 };
 
 export default function HomeScreen() {
+  const { createGroup, groups } = useGroupContext();
   const [isCreateGroupModalVisible, setIsCreateGroupModalVisible] = useState(false);
-  const groups = [
-    { 
-      id: 1, 
-      name: 'Group 1',
-      participantCount: 12,
-      lastActive: '2024-02-20'
-    },
-    { 
-      id: 2, 
-      name: 'Group 2',
-      participantCount: 8,
-      lastActive: '2024-02-19'
-    },
-  ];
 
-  const handleCreateNewGroup = () => {
-    console.log('Create new group');
+  const handleCreateNewGroup = async (name: string) => {
+    try {
+      await createGroup(name);
+      setIsCreateGroupModalVisible(false);
+    } catch (error) {
+      console.error('Error creating group:', error);
+    }
   };
 
   return (
@@ -78,9 +76,16 @@ export default function HomeScreen() {
           className="flex-1"
           showsVerticalScrollIndicator={false}
         >
-          {groups.map(group => (
-            <GroupCard key={group.id} group={group} />
-          ))}
+          {groups.length === 0 ? (
+            <View className="flex-1 justify-center items-center py-8">
+              <Text className="text-neutral-500 text-lg">No groups yet</Text>
+              <Text className="text-neutral-400">Create your first group to get started</Text>
+            </View>
+          ) : (
+            groups.map(group => (
+              <GroupCard key={group.id} group={group} />
+            ))
+          )}
         </ScrollView>
 
         {/* Create Group Button */}

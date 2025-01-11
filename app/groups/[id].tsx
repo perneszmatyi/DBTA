@@ -1,18 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, SafeAreaView, Modal, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@/components/navigation/Header';
 import AddParticipantModal from '@/components/AddparticipantModal';
+import { useParticipantContext } from '@/context/ParticipantContext';
+import { useGroupContext } from '@/context/GroupContext';
 
-type Participant = {
-  id: string;
-  name: string;
-  age: number;
-  hasCompletedTest: boolean;
-};
-
-const ParticipantListItem = ({ participant, onPress }: { participant: Participant; onPress: () => void }) => (
+const ParticipantListItem = ({ participant, onPress }: { participant: any; onPress: () => void }) => (
   <TouchableOpacity 
     onPress={onPress}
     className="mb-3 bg-white rounded-lg shadow-sm overflow-hidden"
@@ -20,10 +15,10 @@ const ParticipantListItem = ({ participant, onPress }: { participant: Participan
     <View className="p-4 flex-row justify-between items-center">
       <View className="flex-row items-center flex-1">
         <View className="w-10 h-10 bg-primary-100 rounded-full items-center justify-center mr-3">
-          <Text className="text-primary-500 font-semibold">{participant.name.charAt(0)}</Text>
+          <Text className="text-primary-500 font-semibold">{participant.firstName.charAt(0)}</Text>
         </View>
         <View className="flex-1">
-          <Text className="text-lg font-semibold text-neutral-900">{participant.name}</Text>
+          <Text className="text-lg font-semibold text-neutral-900">{`${participant.firstName} ${participant.lastName}`}</Text>
           <Text className="text-neutral-500">Age: {participant.age}</Text>
         </View>
       </View>
@@ -47,29 +42,102 @@ const ParticipantListItem = ({ participant, onPress }: { participant: Participan
 export default function GroupDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { participants, fetchParticipants, addParticipant } = useParticipantContext();
+  const { deleteGroup } = useGroupContext();
   const [isAddParticipantModalVisible, setIsAddParticipantModalVisible] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
 
-  const participants: Participant[] = [
-    { id: '1', name: 'Alice', age: 25, hasCompletedTest: true },
-    { id: '2', name: 'Bob', age: 30, hasCompletedTest: false },
-    { id: '3', name: 'Charlie', age: 22, hasCompletedTest: true },
-    { id: '4', name: 'Diana', age: 28, hasCompletedTest: false },
-  ];
+  useEffect(() => {
+    if (id) {
+      fetchParticipants(id as string);
+    }
+  }, [id]);
 
-  const handleAddParticipant = () => {
-    console.log('Add participant');
+  const handleAddParticipant = async (participantData: any) => {
+    try {
+      await addParticipant(id as string, {
+        ...participantData,
+        age: parseInt(participantData.age),
+        hasCompletedTest: false,
+        lastTestDate: null
+      });
+      setIsAddParticipantModalVisible(false);
+    } catch (error) {
+      console.error('Error adding participant:', error);
+    }
   };
 
   const handleParticipantPress = (participantId: string) => {
     router.push(`/participants/${participantId}`);
   };
 
+  const handleDeleteGroup = async () => {
+    setIsMenuVisible(false);
+    Alert.alert(
+      "Delete Group",
+      "Are you sure you want to delete this group?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteGroup(id as string);
+              router.replace('/');
+            } catch (error) {
+              console.error('Error deleting group:', error);
+              Alert.alert('Error', 'Failed to delete group. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const MenuModal = () => (
+    <Modal
+      transparent={true}
+      visible={isMenuVisible}
+      onRequestClose={() => setIsMenuVisible(false)}
+      animationType="fade"
+    >
+      <TouchableOpacity 
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}
+        activeOpacity={1} 
+        onPress={() => setIsMenuVisible(false)}
+      >
+        <View className="absolute top-20 right-4 bg-white rounded-lg shadow-lg overflow-hidden">
+          <TouchableOpacity
+            onPress={handleDeleteGroup}
+            className="flex-row items-center px-4 py-3"
+          >
+            <Ionicons name="trash-outline" size={20} color="#EF4444" />
+            <Text className="ml-2 text-red-500">Delete Group</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
       <Header 
         title="Group Details" 
         path={() => router.replace(`/`)}
+        rightElement={
+          <TouchableOpacity 
+            onPress={() => setIsMenuVisible(true)}
+            className="p-2"
+          >
+            <Ionicons name="ellipsis-horizontal" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        }
       />
+      <MenuModal />
       <View className="flex-1 px-4">
         {/* Header */}
         <View className="py-6">
