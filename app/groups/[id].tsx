@@ -159,14 +159,6 @@ export default function GroupDetailsScreen() {
           </View>
         </View>
 
-        {/* Search/Filter Bar */}
-        <TouchableOpacity 
-          className="flex-row items-center bg-white rounded-lg px-4 py-3 mb-4 shadow-sm"
-        >
-          <Ionicons name="search-outline" size={20} color="#6B7280" />
-          <Text className="ml-2 text-neutral-500">Search participants...</Text>
-        </TouchableOpacity>
-
         {/* Participants List */}
         <FlatList
           data={participants}

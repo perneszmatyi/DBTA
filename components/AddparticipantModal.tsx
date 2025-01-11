@@ -36,6 +36,12 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
     drivingExperience: ''
   });
 
+  const handleAgeChange = (text: string) => {
+    // Only allow numbers
+    const numericValue = text.replace(/[^0-9]/g, '');
+    setFormData(prev => ({ ...prev, age: numericValue }));
+  };
+
   const handleSubmit = () => {
     onSubmit(formData);
     setFormData({
@@ -110,8 +116,9 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
                         className="bg-neutral-50 mt-4 mb-8 px-4 py-3.5 rounded-xl border border-neutral-200"
                         placeholder="Age"
                         value={formData.age}
-                        onChangeText={(text) => setFormData(prev => ({ ...prev, age: text }))}
+                        onChangeText={handleAgeChange}
                         keyboardType="numeric"
+                        maxLength={3}
                         placeholderTextColor="#999"
                       />
                     </View>

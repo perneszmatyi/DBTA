@@ -19,8 +19,6 @@ export type Group = {
   };
   
   export type TestResults = {
-    participantId: string;
-    timestamp: Date;
     reactionTime: {
       averageTime: number;
       correctTaps: number;
@@ -48,3 +46,11 @@ export type Group = {
       completionScore: number;
     };
   };
+  
+  export type TestSession = {
+    participantId: string;
+    groupId: string;
+    timestamp: Date;
+    completed: boolean;
+    tests: TestResults;
+  }
