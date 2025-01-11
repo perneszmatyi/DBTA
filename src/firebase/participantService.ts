@@ -1,6 +1,6 @@
 import { db } from './firebaseConfig';
 import { Participant } from './types';
-import { collection, addDoc, getDocs, query, where, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 
 export const participantService = {
   // Fetch all participants for a group
@@ -38,6 +38,23 @@ export const participantService = {
       return docRef.id;
     } catch (error) {
       console.error('Error adding participant:', error);
+      throw error;
+    }
+  },
+
+  // Delete participant
+  async deleteParticipant(participantId: string, groupId: string): Promise<void> {
+    try {
+      // Delete participant
+      await deleteDoc(doc(db, 'participants', participantId));
+
+      // Update group's participant count
+      const groupRef = doc(db, 'groups', groupId);
+      await updateDoc(groupRef, {
+        participantCount: increment(-1)
+      });
+    } catch (error) {
+      console.error('Error deleting participant:', error);
       throw error;
     }
   }

@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@/components/navigation/Header';
@@ -17,7 +17,8 @@ const StatCard = ({ label, value, icon }: { label: string; value: string | numbe
 
 export default function ParticipantDetailsScreen() {
   const { id } = useLocalSearchParams();
-  const { currentParticipant, participants } = useParticipantContext();
+  const { currentParticipant, participants, deleteParticipant } = useParticipantContext();
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
 
   // Find the participant in the list
   const participant = participants.find(p => p.id === id) || currentParticipant;
@@ -29,6 +30,60 @@ export default function ParticipantDetailsScreen() {
       console.error('Participant ID is undefined');
     }
   };
+
+  const handleDeleteParticipant = () => {
+    setIsMenuVisible(false);
+    Alert.alert(
+      "Delete Participant",
+      "Are you sure you want to delete this participant? This will also delete all their test results. This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              if (participant) {
+                await deleteParticipant(participant.id, participant.groupId);
+                router.back();
+              }
+            } catch (error) {
+              console.error('Error deleting participant:', error);
+              Alert.alert('Error', 'Failed to delete participant. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const MenuModal = () => (
+    <Modal
+      transparent={true}
+      visible={isMenuVisible}
+      onRequestClose={() => setIsMenuVisible(false)}
+      animationType="fade"
+    >
+      <TouchableOpacity 
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}
+        activeOpacity={1} 
+        onPress={() => setIsMenuVisible(false)}
+      >
+        <View className="absolute top-20 right-4 bg-white rounded-lg shadow-lg overflow-hidden">
+          <TouchableOpacity
+            onPress={handleDeleteParticipant}
+            className="flex-row items-center px-4 py-3"
+          >
+            <Ionicons name="trash-outline" size={20} color="#EF4444" />
+            <Text className="ml-2 text-red-500">Delete Participant</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
 
   if (!participant) {
     return (
@@ -49,7 +104,16 @@ export default function ParticipantDetailsScreen() {
       <Header 
         title="Participant Details" 
         path={() => router.back()}
+        rightElement={
+          <TouchableOpacity 
+            onPress={() => setIsMenuVisible(true)}
+            className="p-2"
+          >
+            <Ionicons name="ellipsis-horizontal" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        }
       />
+      <MenuModal />
       <ScrollView className="flex-1">
         <View className="px-4">
           {/* Header */}

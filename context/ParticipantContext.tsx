@@ -8,6 +8,7 @@ type ParticipantContextType = {
   setCurrentParticipant: (participant: Participant | null) => void;
   addParticipant: (groupId: string, participantData: Omit<Participant, 'id' | 'groupId' | 'createdAt'>) => Promise<void>;
   fetchParticipants: (groupId: string) => Promise<void>;
+  deleteParticipant: (participantId: string, groupId: string) => Promise<void>;
 };
 
 const ParticipantContext = createContext<ParticipantContextType | undefined>(undefined);
@@ -44,6 +45,19 @@ export function ParticipantProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteParticipant = async (participantId: string, groupId: string) => {
+    try {
+      await participantService.deleteParticipant(participantId, groupId);
+      await fetchParticipants(groupId);
+      if (currentParticipant?.id === participantId) {
+        setCurrentParticipant(null);
+      }
+    } catch (error) {
+      console.error('Error deleting participant:', error);
+      throw error;
+    }
+  };
+
   return (
     <ParticipantContext.Provider 
       value={{ 
@@ -51,7 +65,8 @@ export function ParticipantProvider({ children }: { children: ReactNode }) {
         currentParticipant, 
         setCurrentParticipant,
         addParticipant,
-        fetchParticipants
+        fetchParticipants,
+        deleteParticipant
       }}
     >
       {children}
