@@ -33,49 +33,68 @@ export default function BalanceTest({ onComplete }: BalanceTestProps) {
 
   // Check accelerometer availability
   useEffect(() => {
-    checkAvailability();
-  }, []);
+    let isMounted = true;
+    
+    const checkAvailability = async () => {
+      const isAccelerometerAvailable = await Accelerometer.isAvailableAsync();
+      if (!isMounted) return;
 
-  const checkAvailability = async () => {
-    const isAccelerometerAvailable = await Accelerometer.isAvailableAsync();
-    setIsAvailable(isAccelerometerAvailable);
-    if (!isAccelerometerAvailable) {
-      updateBalanceResults({
-        averageDeviation: 0,
-        maxDeviation: 0,
-        testDuration: 0
-      });
-      Alert.alert(
-        "Sensor Not Available",
-        "The accelerometer sensor is not available on this device. The balance test cannot be performed.",
-        [{ text: "OK", onPress: () => onComplete(null) }]
-      );
-    }
-  };
+      setIsAvailable(isAccelerometerAvailable);
+      if (!isAccelerometerAvailable) {
+        // Immediately submit zero results and complete
+        const zeroResults = { 
+          averageDeviation: 0, 
+          maxDeviation: 0, 
+          testDuration: 0 
+        };
+        updateBalanceResults(zeroResults);
+        Alert.alert(
+          "Sensor Not Available",
+          "Balance test skipped - no accelerometer found.",
+          [{ text: "OK", onPress: () => onComplete(zeroResults) }]
+        );
+      }
+    };
+
+    checkAvailability();
+    return () => { isMounted = false };
+  }, []);
 
   // Subscribe to accelerometer when test starts
   useEffect(() => {
+    let isMounted = true;
     let subscription: ReturnType<typeof Accelerometer.addListener> | null = null;
 
     const startAccelerometer = async () => {
       try {
         await Accelerometer.setUpdateInterval(SAMPLE_RATE);
+        
+        // Only proceed if component is still mounted
+        if (!isMounted || testState !== 'testing') return;
+        
         subscription = Accelerometer.addListener(accelerometerData => {
-          if (testState === 'testing') {
-            const reading: AccelerometerReading = {
+          if (isMounted && testState === 'testing') {  // Add mount check
+            setReadings(prev => [...prev, {
               ...accelerometerData,
               timestamp: Date.now()
-            };
-            setReadings(prev => [...prev, reading]);
+            }]);
           }
         });
       } catch (error) {
-        console.error('Error setting up accelerometer:', error);
-        Alert.alert(
-          "Sensor Error",
-          "There was an error accessing the accelerometer. Please try again.",
-          [{ text: "OK", onPress: () => onComplete(null) }]
-        );
+        if (isMounted) {  // Only show alert if mounted
+          console.error('Sensor setup failed:', error);
+          Alert.alert(
+            "Sensor Error",
+            "Accelerometer access failed. Returning to start.",
+            [{
+              text: "OK",
+              onPress: () => {
+                setTestState('intro');  // Reset state
+                onComplete(null);  // Exit test flow
+              }
+            }]
+          );
+        }
       }
     };
 
@@ -84,9 +103,8 @@ export default function BalanceTest({ onComplete }: BalanceTestProps) {
     }
 
     return () => {
-      if (subscription) {
-        subscription.remove();
-      }
+      isMounted = false;  // Flag for cleanup
+      subscription?.remove();  // Remove listener
     };
   }, [testState, isAvailable]);
 

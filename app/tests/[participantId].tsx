@@ -17,7 +17,7 @@ const tests = [
 ];
 
 export default function TestScreen() {
-  const [currentTestIndex, setCurrentTestIndex] = useState(3);
+  const [currentTestIndex, setCurrentTestIndex] = useState(2);
   const [testFinished, setTestFinished] = useState(false);
   const { participantId } = useLocalSearchParams();
   const { 
