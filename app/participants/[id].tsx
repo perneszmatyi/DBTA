@@ -90,7 +90,7 @@ export default function ParticipantDetailsScreen() {
       <SafeAreaView className="flex-1 bg-neutral-50">
         <Header 
           title="Participant Details" 
-          path={() => router.back()}
+          path={() => router.replace('/')}
         />
         <View className="flex-1 justify-center items-center">
           <Text className="text-neutral-500">Participant not found</Text>
@@ -98,12 +98,11 @@ export default function ParticipantDetailsScreen() {
       </SafeAreaView>
     );
   }
-
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
       <Header 
         title="Participant Details" 
-        path={() => router.back()}
+        path={() => router.replace(`/groups/${participant.groupId}`)}
         rightElement={
           <TouchableOpacity 
             onPress={() => setIsMenuVisible(true)}

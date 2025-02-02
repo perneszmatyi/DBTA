@@ -80,6 +80,7 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
         setTestState('waiting');
       } else {
         setTestState('completed');
+        console.log('trials', trials);
       }
     }
   };

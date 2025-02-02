@@ -106,11 +106,18 @@ export default function GroupDetailsScreen() {
       animationType="fade"
     >
       <TouchableOpacity 
-        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}
+        style={{ 
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'flex-start',
+          alignItems: 'flex-end',
+          paddingTop: 80,
+          paddingRight: 16
+        }}
         activeOpacity={1} 
         onPress={() => setIsMenuVisible(false)}
       >
-        <View className="absolute top-20 right-4 bg-white rounded-lg shadow-lg overflow-hidden">
+        <View className="bg-white rounded-lg shadow-lg overflow-hidden">
           <TouchableOpacity
             onPress={handleDeleteGroup}
             className="flex-row items-center px-4 py-3"

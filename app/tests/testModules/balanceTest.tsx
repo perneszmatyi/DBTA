@@ -40,6 +40,11 @@ export default function BalanceTest({ onComplete }: BalanceTestProps) {
     const isAccelerometerAvailable = await Accelerometer.isAvailableAsync();
     setIsAvailable(isAccelerometerAvailable);
     if (!isAccelerometerAvailable) {
+      updateBalanceResults({
+        averageDeviation: 0,
+        maxDeviation: 0,
+        testDuration: 0
+      });
       Alert.alert(
         "Sensor Not Available",
         "The accelerometer sensor is not available on this device. The balance test cannot be performed.",

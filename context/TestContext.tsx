@@ -8,7 +8,7 @@ type TestContextType = {
   updateReactionResults: (results: TestResults['reactionTime']) => void;
   updateMemoryResults: (results: TestResults['memory']) => void;
   updateBalanceResults: (results: TestResults['balance']) => void;
-  updateTrackingResults: (results: TestResults['tracking']) => void;
+  updateChoiceResults: (results: TestResults['choice']) => void;
   saveResults: (participantId: string) => Promise<void>;
   clearResults: () => void;
 };
@@ -48,10 +48,10 @@ export function TestProvider({ children }: { children: ReactNode }) {
     } as TestResults));
   };
 
-  const updateTrackingResults = (results: TestResults['tracking']) => {
+  const updateChoiceResults = (results: TestResults['choice']) => {
     setTestResults(prev => ({
       ...prev,
-      tracking: results
+      choice: results
     } as TestResults));
   };
 
@@ -64,6 +64,8 @@ export function TestProvider({ children }: { children: ReactNode }) {
     if (!participant) {
       throw new Error('Participant not found');
     }
+
+    console.log('testResults', testResults);
 
     const testSession: TestSession = {
       participantId,
@@ -88,7 +90,7 @@ export function TestProvider({ children }: { children: ReactNode }) {
         updateReactionResults,
         updateMemoryResults,
         updateBalanceResults,
-        updateTrackingResults,
+        updateChoiceResults,
         saveResults,
         clearResults
       }}

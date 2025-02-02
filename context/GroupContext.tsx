@@ -28,20 +28,17 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = groupsService.subscribeToGroups((updatedGroups) => {
       setGroups(updatedGroups);
-      // Update currentGroup if it exists in the updated groups
+      // Only update currentGroup if it exists and has changed
       if (currentGroup) {
         const updatedCurrentGroup = updatedGroups.find(g => g.id === currentGroup.id);
-        if (updatedCurrentGroup) {
+        if (updatedCurrentGroup && JSON.stringify(updatedCurrentGroup) !== JSON.stringify(currentGroup)) {
           setCurrentGroup(updatedCurrentGroup);
         }
-      } else if (updatedGroups.length > 0) {
-        setCurrentGroup(updatedGroups[0]);
       }
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [currentGroup]); // Add currentGroup as dependency to properly update it
+  }, []); // Remove currentGroup from dependencies
 
   const fetchGroups = async () => {
     try {
@@ -59,7 +56,6 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const createGroup = async (name: string) => {
     try {
       await groupsService.createGroup(name);
-      // No need to manually fetch groups as the real-time listener will update automatically
     } catch (error) {
       console.error('Error creating group:', error);
       throw error;
@@ -68,11 +64,8 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   const deleteGroup = async (groupId: string) => {
     try {
+      setCurrentGroup(null); // Clear current group before deletion
       await groupsService.deleteGroup(groupId);
-      // No need to manually fetch groups as the real-time listener will update automatically
-      if (currentGroup?.id === groupId) {
-        setCurrentGroup(null);
-      }
     } catch (error) {
       console.error('Error deleting group:', error);
       throw error;

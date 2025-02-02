@@ -39,12 +39,19 @@ export type Group = {
       maxDeviation: number;
       testDuration: number;
     };
-    tracking: {
+    choice: {
+      averageReactionTime: number;
+      correctTaps: number;
       averageDeviation: number;
-      timeOnTarget: number;
-      totalMisses: number;
-      completionScore: number;
+      trials: Array<{
+        type: 'green' | 'red';
+        position: { x: number; y: number };
+        responseTime: number;
+        tapPosition?: { x: number; y: number };
+        correct: boolean;
+      }>;
     };
+
   };
   
   export type TestSession = {

@@ -1,6 +1,6 @@
 import { db } from './firebaseConfig';
 import { Participant } from './types';
-import { collection, addDoc, getDocs, query, where, doc, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, updateDoc, increment, deleteDoc, writeBatch } from 'firebase/firestore';
 
 export const participantService = {
   // Fetch all participants for a group
@@ -42,17 +42,32 @@ export const participantService = {
     }
   },
 
-  // Delete participant
+  // Delete participant and all their test results
   async deleteParticipant(participantId: string, groupId: string): Promise<void> {
     try {
+      const batch = writeBatch(db);
+
+      // Delete all test results for this participant
+      const testResultsQuery = query(
+        collection(db, 'testResults'), 
+        where('participantId', '==', participantId)
+      );
+      const testResultsSnapshot = await getDocs(testResultsQuery);
+      testResultsSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+
       // Delete participant
-      await deleteDoc(doc(db, 'participants', participantId));
+      batch.delete(doc(db, 'participants', participantId));
 
       // Update group's participant count
       const groupRef = doc(db, 'groups', groupId);
-      await updateDoc(groupRef, {
+      batch.update(groupRef, {
         participantCount: increment(-1)
       });
+
+      // Commit all changes in a single batch
+      await batch.commit();
     } catch (error) {
       console.error('Error deleting participant:', error);
       throw error;
