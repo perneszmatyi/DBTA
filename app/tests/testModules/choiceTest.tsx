@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Dimensions, GestureResponderEvent } from 'react-native';
 import TestIntro from '@/components/TestIntro';
+import { testConfig } from "../config/testConfig";
 
 type Trial = {
   type: 'green' | 'red';
@@ -20,25 +21,7 @@ type ChoiceTestProps = {
   }) => void;
 };
 
-const CIRCLE_SIZE = 75;                // Diameter in pixels
-const CIRCLE_RADIUS = CIRCLE_SIZE / 2;
-const BUTTON_HEIGHT = 80;              // Height of the bottom button
-const BUTTON_PADDING_BOTTOM = 32;      // Reduced padding below the bottom button
-const TOTAL_TRIALS = 8;
-const CIRCLE_DISPLAY_TIME = 500;       // Circle visible for 0.5 seconds
-const MIN_DELAY = 1000;                // 1 second delay
-const MAX_DELAY = 3000;                // 3 seconds delay
-const TOP_MARGIN = 10;                
 const SCREEN = Dimensions.get('window');
-const RED_BUTTON_HEIGHT = 80;
-
-// Define the spawn area for circles (absolute coordinates within the screen)
-const playArea = {
-  top: 85,
-  bottom: 535,
-  left: 40,
-  right: 350
-};
 
 const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
   const [testState, setTestState] = useState<'intro' | 'waiting' | 'tapping' | 'completed'>('intro');
@@ -65,8 +48,8 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
   // Generate a random position for the circle within the play area
   const generateRandomPosition = () => {
     return {
-      x: playArea.left + Math.random() * (playArea.right - playArea.left),
-      y: playArea.top + Math.random() * (playArea.bottom - playArea.top)
+      x: testConfig.choiceTest.PLAY_AREA.LEFT + Math.random() * (testConfig.choiceTest.PLAY_AREA.RIGHT - testConfig.choiceTest.PLAY_AREA.LEFT),
+      y: testConfig.choiceTest.PLAY_AREA.TOP + Math.random() * (testConfig.choiceTest.PLAY_AREA.BOTTOM - testConfig.choiceTest.PLAY_AREA.TOP)
     };
   };
 
@@ -89,10 +72,10 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
       
       const hideTimer = setTimeout(() => {
         setShowCircle(false);
-      }, CIRCLE_DISPLAY_TIME);
+      }, testConfig.choiceTest.CIRCLE_DISPLAY_TIME);
       
       timeoutRefs.current.push(hideTimer);
-    }, MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY));
+    }, testConfig.choiceTest.MIN_DELAY + Math.random() * (testConfig.choiceTest.MAX_DELAY - testConfig.choiceTest.MIN_DELAY));
 
     timeoutRefs.current.push(delayTimer);
   };
@@ -104,11 +87,11 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
     setTapPosition({ x: absoluteX, y: absoluteY });
     
     // Only register the tap if a trial is active
-    if (trials.length >= TOTAL_TRIALS || !startTime) return;
+    if (trials.length >= testConfig.choiceTest.TOTAL_TRIALS || !startTime) return;
 
     const responseTime = Date.now() - startTime;
     const windowHeight = Dimensions.get('window').height;
-    const buttonTopEdge = windowHeight - BUTTON_PADDING_BOTTOM - BUTTON_HEIGHT;
+    const buttonTopEdge = windowHeight - testConfig.choiceTest.BUTTON_PADDING_BOTTOM - testConfig.choiceTest.BUTTON_HEIGHT;
     let correct = false;
     let deviation = 0;
 
@@ -121,8 +104,8 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
       const dy = absoluteY - activeCirclePosition.y;
       // Compare using Euclidean distance.
       const distance = Math.sqrt(dx * dx + dy * dy);
-      deviation = distance <= CIRCLE_RADIUS ? 0 : distance - CIRCLE_RADIUS;
-      correct = distance <= CIRCLE_RADIUS;
+      deviation = distance <= testConfig.choiceTest.CIRCLE_RADIUS ? 0 : distance - testConfig.choiceTest.CIRCLE_RADIUS;
+      correct = distance <= testConfig.choiceTest.CIRCLE_RADIUS;
     }
 
     const trial: Trial = {
@@ -137,9 +120,9 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
     setTrials(prev => [...prev, trial]);
     setStartTime(0);  // Reset startTime to prevent multiple taps for the same trial
 
-    if (trials.length + 1 === TOTAL_TRIALS) {
+    if (trials.length + 1 === testConfig.choiceTest.TOTAL_TRIALS) {
       onComplete({
-        averageReactionTime: trials.reduce((sum, t) => sum + t.responseTime, responseTime) / TOTAL_TRIALS,
+        averageReactionTime: trials.reduce((sum, t) => sum + t.responseTime, responseTime) / testConfig.choiceTest.TOTAL_TRIALS,
         correctTaps: trials.filter(t => t.correct).length + (correct ? 1 : 0),
         averageDeviation: trials.filter(t => t.type === 'green').length > 0
           ? trials.reduce((sum, t) => t.type === 'green' ? sum + t.deviation : sum, deviation) / (trials.filter(t => t.type === 'green').length + (circleColor === 'green' ? 1 : 0))
@@ -192,7 +175,7 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
       {/* Trial Counter */}
       <View className="absolute top-0 left-0 right-0 z-10 py-8 items-center">
         <Text className="text-sm text-neutral-500">
-          Trial {trials.length + 1} of {TOTAL_TRIALS}
+          Trial {trials.length + 1} of {testConfig.choiceTest.TOTAL_TRIALS}
         </Text>
       </View>
 
@@ -200,10 +183,10 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
       <View
         style={{
           position: 'absolute',
-          left: playArea.left,
-          top: playArea.top,
-          width: playArea.right - playArea.left,
-          height: playArea.bottom - playArea.top,
+          left: testConfig.choiceTest.PLAY_AREA.LEFT,
+          top: testConfig.choiceTest.PLAY_AREA.TOP,
+          width: testConfig.choiceTest.PLAY_AREA.RIGHT - testConfig.choiceTest.PLAY_AREA.LEFT,
+          height: testConfig.choiceTest.PLAY_AREA.BOTTOM - testConfig.choiceTest.PLAY_AREA.TOP,
           borderWidth: 2,
           borderColor: 'blue',
           zIndex: 5,
@@ -215,11 +198,11 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
         <View
           style={{
             position: 'absolute',
-            left: circlePosition.x - CIRCLE_RADIUS,
-            top: circlePosition.y - CIRCLE_RADIUS,
-            width: CIRCLE_SIZE,
-            height: CIRCLE_SIZE,
-            borderRadius: CIRCLE_RADIUS,
+            left: circlePosition.x - testConfig.choiceTest.CIRCLE_RADIUS,
+            top: circlePosition.y - testConfig.choiceTest.CIRCLE_RADIUS,
+            width: testConfig.choiceTest.CIRCLE_SIZE,
+            height: testConfig.choiceTest.CIRCLE_SIZE,
+            borderRadius: testConfig.choiceTest.CIRCLE_RADIUS,
             backgroundColor: circleColor === 'green' ? '#22c55e' : '#ef4444',
             zIndex: 10,
           }}
@@ -230,10 +213,10 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
       <View 
         style={{
           position: 'absolute',
-          bottom: 32,
-          left: SCREEN.width / 2 - 100, // Center 200px wide button
-          width: 200,
-          height: RED_BUTTON_HEIGHT,
+          bottom: testConfig.choiceTest.BUTTON_PADDING_BOTTOM,
+          left: SCREEN.width / 2 - testConfig.choiceTest.BUTTON_WIDTH / 2,
+          width: testConfig.choiceTest.BUTTON_WIDTH,
+          height: testConfig.choiceTest.RED_BUTTON_HEIGHT,
           backgroundColor: '#fee2e2',
           borderRadius: 8,
           borderWidth: 2,

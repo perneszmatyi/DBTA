@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import TestIntro from '@/components/TestIntro';
 import TestComplete from '@/components/TestComplete';
+import { testConfig } from "../config/testConfig";
 
 type Trial = {
   type: 'green' | 'red';
@@ -18,6 +19,8 @@ type ReactionTimeTestProps = {
   }) => void;
 };
 
+const totalTrials = testConfig.reactionTimeTest.TOTAL_TRIALS;
+
 const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
   const [testState, setTestState] = useState<'ready' | 'waiting' | 'tapping' | 'completed'>('ready');
   const [trials, setTrials] = useState<Trial[]>([]);
@@ -28,7 +31,6 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
   } | null>(null);
   const [showColor, setShowColor] = useState(false);
 
-  const totalTrials = 5;
   const { width } = Dimensions.get('window');
 
   useEffect(() => {
@@ -44,6 +46,7 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
       };
       setCurrentTrial(newTrial);
 
+      const delay = testConfig.reactionTimeTest.MIN_DELAY + Math.random() * (testConfig.reactionTimeTest.MAX_DELAY - testConfig.reactionTimeTest.MIN_DELAY);
       const timeout = setTimeout(() => {
         setTestState('tapping');
         setStartTime(Date.now());
@@ -51,8 +54,8 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
         
         setTimeout(() => {
           setShowColor(false);
-        }, 500);
-      }, Math.random() * 2000 + 1000);
+        }, testConfig.reactionTimeTest.TAP_DISPLAY_TIME);
+      }, delay);
 
       return () => clearTimeout(timeout);
     }
@@ -80,14 +83,10 @@ const ReactionTimeTest = ({ onComplete }: ReactionTimeTestProps) => {
         setTestState('waiting');
       } else {
         setTestState('completed');
-        console.log('trials', trials);
       }
     }
   };
 
- 
-
-  
   if (testState === 'completed') {
     const averageTime = Math.round(trials.reduce((sum, trial) => sum + trial.responseTime, 0) / totalTrials);
     const correctTaps = trials.filter(trial => trial.correct).length;

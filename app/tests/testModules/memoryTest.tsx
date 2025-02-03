@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, Dimensions, Text } from 'react-native';
 import TestIntro from '@/components/TestIntro';
 import TestComplete from '@/components/TestComplete';
+import { testConfig } from "../config/testConfig";
 
 type MemoryTestProps = {
   onComplete: (results: {
@@ -42,12 +43,12 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
   const [testState, setTestState] = useState<'intro' | 'showing' | 'input' | 'completed'>('intro');
   const [sequence, setSequence] = useState<number[]>([]);
   const [userSequence, setUserSequence] = useState<number[]>([]);
-  const [currentLength, setCurrentLength] = useState(4);
+  const [currentLength, setCurrentLength] = useState(testConfig.memoryTest.START_SEQUENCE_LENGTH);
+  const [maxSequenceLength, setMaxSequenceLength] = useState(testConfig.memoryTest.START_SEQUENCE_LENGTH);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   
   // Results tracking
   const [correctSequences, setCorrectSequences] = useState(0);
-  const [maxSequenceLength, setMaxSequenceLength] = useState(4);
   const [responseTimes, setResponseTimes] = useState<number[]>([]);
   const [totalErrors, setTotalErrors] = useState(0);
   const [lastTapTime, setLastTapTime] = useState<number | null>(null);
@@ -75,8 +76,8 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
           setTimeout(() => {
             setHighlightedIndex(null);
             resolve(null);
-          }, 500);
-        }, 500);
+          }, testConfig.memoryTest.HIGHLIGHT_DURATION);
+        }, testConfig.memoryTest.INTERVAL_BETWEEN_HIGHLIGHTS);
       });
     }
     setTestState('input');
@@ -114,11 +115,11 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
       setCorrectSequences(prev => prev + 1);
     }
     
-    if (currentLength < 6) {
+    if (currentLength < testConfig.memoryTest.MAX_SEQUENCE_LENGTH) {
       setCurrentLength(prev => prev + 1);
       setUserSequence([]);
       const newSequence = generateSequence();
-      setTimeout(() => showSequence(newSequence), 1000);
+      setTimeout(() => showSequence(newSequence), testConfig.memoryTest.INTER_SEQUENCE_DELAY);
     } else {
       setTestState('completed');
     }
@@ -172,7 +173,7 @@ const MemoryTest = ({ onComplete }: MemoryTestProps) => {
           {testState === 'showing' ? "Watch the sequence..." : "Repeat the sequence!"}
         </Text>
         <Text className="text-neutral-500 text-center">
-          Level {currentLength - 3} of 3
+          Level {currentLength - testConfig.memoryTest.START_SEQUENCE_LENGTH + 1} of {testConfig.memoryTest.MAX_SEQUENCE_LENGTH - testConfig.memoryTest.START_SEQUENCE_LENGTH + 1}
         </Text>
       </View>
 

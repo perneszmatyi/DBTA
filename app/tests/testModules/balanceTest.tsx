@@ -5,15 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTestContext } from '@/context/TestContext';
 import TestIntro from '@/components/TestIntro';
 import TestComplete from '@/components/TestComplete';
+import { testConfig } from "../config/testConfig";
 
 type ThreeAxisMeasurement = {
   x: number;
   y: number;
   z: number;
 };
-
-const TEST_DURATION = 10000; // 10 seconds in milliseconds
-const SAMPLE_RATE = 100; // Sample rate in milliseconds
 
 type AccelerometerReading = ThreeAxisMeasurement & {
   timestamp: number;
@@ -25,8 +23,8 @@ type BalanceTestProps = {
 
 export default function BalanceTest({ onComplete }: BalanceTestProps) {
   const [testState, setTestState] = useState<'intro' | 'countdown' | 'testing' | 'completed'>('intro');
-  const [countdown, setCountdown] = useState(3);
-  const [timeLeft, setTimeLeft] = useState(TEST_DURATION / 1000);
+  const [countdown, setCountdown] = useState(testConfig.balanceTest.COUNTDOWN);
+  const [timeLeft, setTimeLeft] = useState(testConfig.balanceTest.TEST_DURATION / 1000);
   const [readings, setReadings] = useState<AccelerometerReading[]>([]);
   const [isAvailable, setIsAvailable] = useState(true);
   const { updateBalanceResults } = useTestContext();
@@ -67,7 +65,7 @@ export default function BalanceTest({ onComplete }: BalanceTestProps) {
 
     const startAccelerometer = async () => {
       try {
-        await Accelerometer.setUpdateInterval(SAMPLE_RATE);
+        await Accelerometer.setUpdateInterval(testConfig.balanceTest.SAMPLE_RATE);
         
         // Only proceed if component is still mounted
         if (!isMounted || testState !== 'testing') return;
@@ -116,7 +114,7 @@ export default function BalanceTest({ onComplete }: BalanceTestProps) {
       timer = setTimeout(() => setCountdown(countdown - 1), 1000);
     } else if (testState === 'countdown' && countdown === 0) {
       setTestState('testing');
-      setTimeLeft(TEST_DURATION / 1000);
+      setTimeLeft(testConfig.balanceTest.TEST_DURATION / 1000);
     }
 
     return () => clearTimeout(timer);
@@ -157,7 +155,7 @@ export default function BalanceTest({ onComplete }: BalanceTestProps) {
     const results = {
       averageDeviation: deviations.reduce((a, b) => a + b, 0) / deviations.length,
       maxDeviation: Math.max(...deviations),
-      testDuration: TEST_DURATION / 1000
+      testDuration: testConfig.balanceTest.TEST_DURATION / 1000
     };
 
     updateBalanceResults(results);
@@ -175,7 +173,7 @@ export default function BalanceTest({ onComplete }: BalanceTestProps) {
       return;
     }
     setTestState('countdown');
-    setCountdown(3);
+    setCountdown(testConfig.balanceTest.COUNTDOWN);
     setReadings([]);
   };
 
