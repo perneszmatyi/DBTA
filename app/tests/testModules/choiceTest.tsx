@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions, GestureResponderEvent } from 'react-native';
 import TestIntro from '@/components/TestIntro';
 
 type Trial = {
@@ -9,7 +9,7 @@ type Trial = {
   tapPosition?: { x: number; y: number };
   deviation: number;
   correct: boolean;
-}
+};
 
 type ChoiceTestProps = {
   onComplete: (results: {
@@ -23,116 +23,132 @@ type ChoiceTestProps = {
 const CIRCLE_SIZE = 75;                // Diameter in pixels
 const CIRCLE_RADIUS = CIRCLE_SIZE / 2;
 const BUTTON_HEIGHT = 80;              // Height of the bottom button
-const BUTTON_PADDING_BOTTOM = 32;      // Reduced padding below the bottom button (was 8)
+const BUTTON_PADDING_BOTTOM = 32;      // Reduced padding below the bottom button
 const TOTAL_TRIALS = 8;
 const CIRCLE_DISPLAY_TIME = 500;       // Circle visible for 0.5 seconds
 const MIN_DELAY = 1000;                // 1 second delay
 const MAX_DELAY = 3000;                // 3 seconds delay
-const TOP_MARGIN = 10;                // Height reserved at the top (for trial counter)
+const TOP_MARGIN = 10;                
+const SCREEN = Dimensions.get('window');
+const RED_BUTTON_HEIGHT = 80;
+
+// Define the spawn area for circles (absolute coordinates within the screen)
+const playArea = {
+  top: 85,
+  bottom: 535,
+  left: 40,
+  right: 350
+};
 
 const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
   const [testState, setTestState] = useState<'intro' | 'waiting' | 'tapping' | 'completed'>('intro');
   const [trials, setTrials] = useState<Trial[]>([]);
   const [showCircle, setShowCircle] = useState(false);
   const [circlePosition, setCirclePosition] = useState({ x: 0, y: 0 });
+  const [activeCirclePosition, setActiveCirclePosition] = useState({ x: 0, y: 0 });
   const [circleColor, setCircleColor] = useState<'green' | 'red'>('green');
   const [startTime, setStartTime] = useState(0);
+  const containerRef = React.useRef<View>(null);
+  const [containerOffset, setContainerOffset] = useState({ x: 0, y: 0 });
+  const [tapPosition, setTapPosition] = useState({ x: 0, y: 0 });
 
-  const windowHeight = Dimensions.get('window').height;
-  
-  // Define the spawn area for circles
-  const playArea = {
-    top: 85,
-    bottom: 535,
-    left: 40,
-    right: 350
+  // Timer refs
+  const timeoutRefs = React.useRef<Array<NodeJS.Timeout>>([]);
+
+  // Register container's absolute screen offset
+  const handleContainerLayout = () => {
+    containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
+      setContainerOffset({ x: pageX, y: pageY });
+    });
   };
 
+  // Generate a random position for the circle within the play area
   const generateRandomPosition = () => {
-    const x = playArea.left + Math.random() * (playArea.right - playArea.left);
-    const y = playArea.top + Math.random() * (playArea.bottom - playArea.top);
-    return { x, y };
+    return {
+      x: playArea.left + Math.random() * (playArea.right - playArea.left),
+      y: playArea.top + Math.random() * (playArea.bottom - playArea.top)
+    };
   };
 
-  // Starts a new trial by randomly setting circle position, color and a random delay before showing the circle.
+  // Starts a new trial by showing a circle after a delay
   const startNewTrial = () => {
+    // Clear any existing timers first
+    timeoutRefs.current.forEach(clearTimeout);
+    timeoutRefs.current = [];
+
     const position = generateRandomPosition();
     const type = Math.random() < 0.5 ? 'green' : 'red';
     setCirclePosition(position);
     setCircleColor(type);
     
-    const randomDelay = MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY);
-    setTimeout(() => {
+    const delayTimer = setTimeout(() => {
       setShowCircle(true);
       setStartTime(Date.now());
-      // Hide the circle after a fixed display time
-      setTimeout(() => {
+      // Capture the circle position as active when the circle is shown.
+      setActiveCirclePosition(position);
+      
+      const hideTimer = setTimeout(() => {
         setShowCircle(false);
       }, CIRCLE_DISPLAY_TIME);
-    }, randomDelay);
+      
+      timeoutRefs.current.push(hideTimer);
+    }, MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY));
+
+    timeoutRefs.current.push(delayTimer);
   };
 
-  // Handle a tap event.
-  const handleTap = (tapX: number, tapY: number) => {
-    // Only register the tap when a trial is active.
+  // Convert tap to absolute screen coordinates using pageX/pageY
+  const handleTap = (event: GestureResponderEvent) => {
+    const absoluteX = event.nativeEvent.pageX;
+    const absoluteY = event.nativeEvent.pageY;
+    setTapPosition({ x: absoluteX, y: absoluteY });
+    
+    // Only register the tap if a trial is active
     if (trials.length >= TOTAL_TRIALS || !startTime) return;
 
     const responseTime = Date.now() - startTime;
-    // Calculate the top edge of the bottom button.
+    const windowHeight = Dimensions.get('window').height;
     const buttonTopEdge = windowHeight - BUTTON_PADDING_BOTTOM - BUTTON_HEIGHT;
-    const isBottomButtonTap = tapY >= buttonTopEdge;
-    
     let correct = false;
     let deviation = 0;
 
     if (circleColor === 'red') {
-      // For red circles, the tap is correct only if within the bottom button area.
-      correct = isBottomButtonTap;
+      // For red circles, the tap is correct if it is within the bottom button area.
+      correct = absoluteY >= buttonTopEdge;
     } else {
-      // For green circles, check proximity to the circle's center.
-      const distance = Math.sqrt(
-        Math.pow(tapX - circlePosition.x, 2) +
-        Math.pow(tapY - circlePosition.y, 2)
-      );
+      // For green circles, check if the tap is near the circle's center.
+      const dx = absoluteX - activeCirclePosition.x;
+      const dy = absoluteY - activeCirclePosition.y;
+      // Compare using Euclidean distance.
+      const distance = Math.sqrt(dx * dx + dy * dy);
       deviation = distance <= CIRCLE_RADIUS ? 0 : distance - CIRCLE_RADIUS;
       correct = distance <= CIRCLE_RADIUS;
     }
 
     const trial: Trial = {
       type: circleColor,
-      position: circlePosition,
+      position: activeCirclePosition,
       responseTime,
-      tapPosition: { x: tapX, y: tapY },
+      tapPosition: { x: absoluteX, y: absoluteY },
       deviation,
       correct
     };
 
     setTrials(prev => [...prev, trial]);
-    setStartTime(0);  // Reset startTime to prevent further taps for this trial.
+    setStartTime(0);  // Reset startTime to prevent multiple taps for the same trial
 
     if (trials.length + 1 === TOTAL_TRIALS) {
-      handleTestComplete([...trials, trial]);
+      onComplete({
+        averageReactionTime: trials.reduce((sum, t) => sum + t.responseTime, responseTime) / TOTAL_TRIALS,
+        correctTaps: trials.filter(t => t.correct).length + (correct ? 1 : 0),
+        averageDeviation: trials.filter(t => t.type === 'green').length > 0
+          ? trials.reduce((sum, t) => t.type === 'green' ? sum + t.deviation : sum, deviation) / (trials.filter(t => t.type === 'green').length + (circleColor === 'green' ? 1 : 0))
+          : 0,
+        trials: [...trials, trial]
+      });
     } else {
       startNewTrial();
     }
-  };
-
-  const handleTestComplete = (completedTrials: Trial[]) => {
-    const correctTaps = completedTrials.filter(t => t.correct).length;
-    const averageReactionTime = completedTrials.reduce((sum, t) => sum + t.responseTime, 0) / TOTAL_TRIALS;
-    
-    // Average deviation for green circle trials.
-    const greenTrials = completedTrials.filter(t => t.type === 'green');
-    const averageDeviation = greenTrials.length > 0
-      ? greenTrials.reduce((sum, t) => sum + t.deviation, 0) / greenTrials.length
-      : 0;
-
-    onComplete({
-      averageReactionTime,
-      correctTaps,
-      averageDeviation,
-      trials: completedTrials
-    });
   };
 
   useEffect(() => {
@@ -140,6 +156,13 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
       startNewTrial();
     }
   }, [testState]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup all timers on unmount
+      timeoutRefs.current.forEach(clearTimeout);
+    };
+  }, []);
 
   if (testState === 'intro') {
     return (
@@ -159,9 +182,11 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
   }
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
+      ref={containerRef}
+      onLayout={handleContainerLayout}
       activeOpacity={1}
-      onPress={e => handleTap(e.nativeEvent.locationX, e.nativeEvent.locationY)}
+      onPress={handleTap}
       className="flex-1 bg-neutral-50"
     >
       {/* Trial Counter */}
@@ -183,9 +208,9 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
           borderColor: 'blue',
           zIndex: 5,
         }}
-      />
+      /> 
 
-      {/* Circle */}
+      {/* Circle - positioned using absolute screen coordinates */}
       {showCircle && (
         <View
           style={{
@@ -201,14 +226,23 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
         />
       )}
       
-      {/* Bottom Target Button (always visible) */}
+      {/* Bottom Target Button - absolute positioning */}
       <View 
-        className="absolute bottom-0 left-0 right-0 items-center justify-center pb-8"
-        style={{ paddingBottom: BUTTON_PADDING_BOTTOM }}
+        style={{
+          position: 'absolute',
+          bottom: 32,
+          left: SCREEN.width / 2 - 100, // Center 200px wide button
+          width: 200,
+          height: RED_BUTTON_HEIGHT,
+          backgroundColor: '#fee2e2',
+          borderRadius: 8,
+          borderWidth: 2,
+          borderColor: '#fca5a5',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
       >
-        <View className="w-40 h-20 bg-red-100 rounded-lg border-2 border-red-300 items-center justify-center">
-          <Text className="text-red-500 font-medium">Tap Here</Text>
-        </View>
+        <Text className="text-red-500 font-medium">Tap Here</Text>
       </View>
     </TouchableOpacity>
   );
