@@ -40,7 +40,7 @@ export default function TestScreen() {
           style: "destructive",
           onPress: () => {
             clearResults();
-            router.push(`/participants/${participantId}`);
+            router.replace(`/participants/${participantId}`);
           }
         }
       ]
@@ -75,7 +75,7 @@ export default function TestScreen() {
     const handleSave = async () => {
       try {
         await saveResults(participantId as string);
-        router.push(`/participants/${participantId}`);
+        router.replace(`/participants/${participantId}`);
       } catch (error) {
         console.error('Error saving test results:', error);
         Alert.alert('Error', 'Failed to save test results. Please try again.');
@@ -93,7 +93,7 @@ export default function TestScreen() {
             style: "destructive", 
             onPress: () => {
               clearResults();
-              router.push(`/participants/${participantId}`);
+              router.replace(`/participants/${participantId}`);
             }
           }
         ]

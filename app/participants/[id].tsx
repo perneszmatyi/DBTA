@@ -25,7 +25,7 @@ export default function ParticipantDetailsScreen() {
 
   const handleStartTest = (participantId: string) => {
     if (participantId) {
-      router.push(`/tests/${participantId}`);
+      router.replace(`/tests/${participantId}`);
     } else {
       console.error('Participant ID is undefined');
     }
