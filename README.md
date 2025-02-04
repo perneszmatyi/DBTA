@@ -1,50 +1,186 @@
-# Welcome to your Expo app 👋
+# SZE Teszt Alkalmazás - Fejlesztői Dokumentáció
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Projekt Áttekintés
 
-## Get started
+A projekt két fő részből áll:
+1. **Mobil Alkalmazás (sze-dui)**: Adatgyűjtő alkalmazás, amely a tesztek lebonyolítását és az adatok rögzítését végzi
+2. **Web Alkalmazás (sze-react)**: Adminisztrációs felület, amely az összegyűjtött adatok megjelenítését és exportálását teszi lehetővé
 
-1. Install dependencies
+## Alkalmazások Indítása
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+### Mobil Alkalmazás (sze-dui)
 ```bash
-npm run reset-project
+cd sze-dui
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Web Alkalmazás (sze-react)
+```bash
+cd sze-react
+npm install
+npm run dev
+```
 
-## Learn more
+## Technológiai Stack
 
-To learn more about developing your project with Expo, look at the following resources:
+### Mobil Alkalmazás
+- React Native: 0.72.6
+- Expo: ~49.0.15
+- TypeScript: ^5.2.2
+- NativeWind: ^2.0.11
+- Firebase: ^10.5.2
+- Expo Router: ^2.0.0
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Web Alkalmazás
+- React: 18.2.0
+- TypeScript: ^5.0.2
+- TailwindCSS: ^3.3.3
+- Firebase: ^10.5.2
 
-## Join the community
+## Mobil Alkalmazás Struktúra
 
-Join our community of developers creating universal apps.
+```
+sze-dui/
+├── app/                        # Fő képernyők
+│   ├── index.tsx              # Kezdőképernyő
+│   ├── groups/                # Csoport kezelés
+│   ├── participants/          # Résztvevő kezelés
+│   └── tests/                 # Teszt modulok
+│       ├── [participantId].tsx    # Teszt vezérlő
+│       ├── config/               # Teszt konfiguráció
+│       └── testModules/          # Teszt implementációk
+│
+├── components/                # Újrafelhasználható komponensek
+│   ├── Header.tsx            # Fejléc komponens
+│   ├── TestIntro.tsx         # Teszt bevezető képernyő
+│   └── TestComplete.tsx      # Teszt befejező képernyő
+│
+├── firebase/                 # Backend szolgáltatások
+│   ├── firebaseConfig.ts     # Firebase konfiguráció
+│   ├── groupService.ts       # Csoport műveletek
+│   ├── participantService.ts # Résztvevő műveletek
+│   ├── testService.ts        # Teszt eredmény műveletek
+│   └── types.ts              # TypeScript típusdefiníciók
+│
+└── config/                   # Alkalmazás konfiguráció
+    └── testConfig.ts         # Teszt paraméterek
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Teszt Konfiguráció
+
+A `testConfig.ts` fájl tartalmazza az összes teszt modul konfigurációs értékét. Itt állíthatók be:
+- Képernyőméretek és pozíciók
+- Időzítések és késleltetések
+- Próbálkozások száma
+- Egyéb konstans értékek
+
+A fájl részletes kommentekkel van ellátva, amelyek magyarázzák az egyes értékek funkcióját.
+
+## Backend Szolgáltatások
+
+A `firebase` könyvtárban találhatók a backend műveletek implementációi:
+
+- **firebaseConfig.ts**: Firebase kapcsolat konfigurációja
+- **groupService.ts**: Csoportok kezelése (létrehozás, lekérdezés, törlés)
+- **participantService.ts**: Résztvevők kezelése (hozzáadás, módosítás, törlés)
+- **testService.ts**: Teszteredmények kezelése (mentés, lekérdezés)
+- **types.ts**: TypeScript típusdefiníciók az adatmodellekhez
+
+## Adatstruktúra
+
+### Csoportok
+```typescript
+interface Group {
+  id: string;
+  name: string;
+  createdAt: Timestamp;
+}
+```
+
+### Résztvevők
+```typescript
+interface Participant {
+  id: string;
+  name: string;
+  birthYear: number;
+  groupId: string;
+  hasCompletedTest: boolean;
+  lastTestDate?: Timestamp;
+}
+```
+
+### Teszteredmények
+```typescript
+interface TestResults {
+  participantId: string;
+  timestamp: Timestamp;
+  tests: {
+    reaction: ReactionTestResults;
+    memory: MemoryTestResults;
+    balance: BalanceTestResults;
+    choice: ChoiceTestResults;
+  }
+}
+```
+
+## Firebase Műveletek
+
+A backend szolgáltatások a következő műveleteket teszik lehetővé:
+- Csoportok és résztvevők kezelése
+- Teszteredmények mentése
+- Adatok lekérdezése és szűrése
+- Eredmények exportálása (web felületen)
+
+A részletes implementációk a megfelelő service fájlokban találhatók.
+
+## Navigációs Flow
+
+### Alkalmazás Indítása
+1. Kezdőképernyő: Csoport lista
+2. Csoport kiválasztása → Résztvevők listája
+3. Résztvevő kiválasztása → Résztvevő adatlap
+4. "Start Test" gomb → Tesztsorozat indítása
+
+### Tesztsorozat Flow
+1. **Reakcióidő Teszt**
+   - Bevezető képernyő instrukciókkal
+   - Teszt végrehajtása
+   - Automatikus továbblépés a Memória tesztre
+   
+2. **Memória Teszt**
+   - Bevezető képernyő instrukciókkal
+   - Teszt végrehajtása
+   - Automatikus továbblépés az Egyensúly tesztre
+
+3. **Egyensúly Teszt**
+   - Kompatibilitás ellenőrzés
+   - Bevezető képernyő instrukciókkal
+   - Teszt végrehajtása
+   - Automatikus továbblépés a Választásos tesztre
+
+4. **Választásos Teszt**
+   - Bevezető képernyő instrukciókkal
+   - Teszt végrehajtása
+   - Teszt befejezése → Eredmények mentése képernyő
+
+### Kilépési Pontok
+- **"Quit" Gomb**: Minden tesztképernyőn elérhető
+  - Megerősítő dialógus
+  - Igen → Vissza a résztvevő adatlapra (eredmények elvetése)
+  - Nem → Teszt folytatása
+
+- **Eredmények Mentése Képernyő**
+  - "Save Results" → Mentés és visszatérés a résztvevő adatlapra
+  - "Leave Without Saving" → Visszatérés mentés nélkül
+
+### Navigációs Korlátozások
+- Tesztsorozat közben a rendszer-szintű "vissza" navigáció le van tiltva
+- Befejezett tesztre nem lehet visszalépni
+- Mentés képernyőről nem lehet visszalépni az utolsó tesztre
+- Tesztsorozat megszakítása csak a "Quit" gombbal lehetséges
+
+### Állapot Kezelés
+- Minden teszt menti a saját állapotát
+- Tesztsorozat állapota központilag kezelve
+- Résztvevő tesztelési állapota (hasCompletedTest) automatikusan frissül
