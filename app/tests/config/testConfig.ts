@@ -3,26 +3,44 @@
  * Centralizes all hard-coded values used across test modules.
  */
 
+import { Dimensions } from 'react-native';
+
+const SCREEN = Dimensions.get('window');
+const SCREEN_WIDTH = SCREEN.width;
+const SCREEN_HEIGHT = SCREEN.height;
+
+// Calculate bottom boundary to ensure space for button
+const BUTTON_SPACE = SCREEN_HEIGHT * 0.14; // Button height + padding
+
 export const testConfig = {
   // Configuration for Choice Reaction Test
   choiceTest: {
-    CIRCLE_SIZE: 75,                // Diameter of the circle in pixels
-    CIRCLE_RADIUS: 75 / 2,          // Radius of the circle
-    BUTTON_HEIGHT: 80,              // Height of the bottom button in pixels
-    RED_BUTTON_HEIGHT: 80,          // Height for the red target button
-    BUTTON_PADDING_BOTTOM: 32,      // Padding below the bottom button in pixels
-    BUTTON_WIDTH: 200,              // Width of the bottom target button
-    TOTAL_TRIALS: 8,                // Total number of trials
-    CIRCLE_DISPLAY_TIME: 500,       // Duration (ms) for which the circle is visible
-    MIN_DELAY: 1000,                // Minimum delay (ms) before showing the circle
-    MAX_DELAY: 3000,                // Maximum delay (ms) before showing the circle
+    // Circle size as percentage of screen width
+    CIRCLE_SIZE: SCREEN_WIDTH * 0.18,  // ~75px on standard screen
+    get CIRCLE_RADIUS() { return this.CIRCLE_SIZE / 2 },
+    
+    // Button dimensions relative to screen
+    BUTTON_HEIGHT: SCREEN_HEIGHT * 0.1,  // 10% of screen height
+    RED_BUTTON_HEIGHT: SCREEN_HEIGHT * 0.1,
+    BUTTON_PADDING_BOTTOM: SCREEN_HEIGHT * 0.04,  // 4% of screen height
+    BUTTON_WIDTH: SCREEN_WIDTH * 0.5,  // 50% of screen width
+    
+    // Test configuration (non-dimensional constants)
+    TOTAL_TRIALS: 8,
+    CIRCLE_DISPLAY_TIME: 500,
+    MIN_DELAY: 1000,
+    MAX_DELAY: 3000,
+    
+    // Play area as percentage of screen dimensions
+    // Leaving safe margins on all sides
     PLAY_AREA: {
-      TOP: 85,    // Top boundary for circle spawn area
-      BOTTOM: 535, // Bottom boundary for circle spawn area
-      LEFT: 40,   // Left boundary for circle spawn area
-      RIGHT: 350  // Right boundary for circle spawn area
+      TOP: SCREEN_HEIGHT * 0.09,    // 15% from top
+      BOTTOM: SCREEN_HEIGHT * 0.75 - BUTTON_SPACE,  // Adjusted to not overlap with button
+      LEFT: SCREEN_WIDTH * 0.1,      // 10% from left
+      RIGHT: SCREEN_WIDTH * 0.9,     // 90% from left
     },
-    TOP_MARGIN: 10                // Additional margin from top if needed
+    
+    TOP_MARGIN: SCREEN_HEIGHT * 0.02
   },
 
   // Configuration for Reaction Time Test

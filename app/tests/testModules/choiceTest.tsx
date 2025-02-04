@@ -187,8 +187,6 @@ const ChoiceTest = ({ onComplete }: ChoiceTestProps) => {
           top: testConfig.choiceTest.PLAY_AREA.TOP,
           width: testConfig.choiceTest.PLAY_AREA.RIGHT - testConfig.choiceTest.PLAY_AREA.LEFT,
           height: testConfig.choiceTest.PLAY_AREA.BOTTOM - testConfig.choiceTest.PLAY_AREA.TOP,
-          borderWidth: 2,
-          borderColor: 'blue',
           zIndex: 5,
         }}
       /> 
