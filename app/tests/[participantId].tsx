@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, Stack } from 'expo-router';
 import Header from '@/components/navigation/Header';
 import { useTestContext } from '@/context/TestContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,7 +17,7 @@ const tests = [
 ];
 
 export default function TestScreen() {
-  const [currentTestIndex, setCurrentTestIndex] = useState(3);
+  const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [testFinished, setTestFinished] = useState(false);
   const { participantId } = useLocalSearchParams();
   const { 
@@ -130,6 +130,13 @@ export default function TestScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
+      <Stack.Screen 
+        options={{
+          gestureEnabled: false,  // Disable back gesture
+          headerShown: false,     // Hide header
+          animation: 'none'       // Disable animation
+        }} 
+      />
       {testFinished ? (
         <TestsCompletionView />
       ) : (
