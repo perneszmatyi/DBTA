@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, SafeAreaView, Modal, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@/components/navigation/Header';
 import AddParticipantModal from '@/components/AddparticipantModal';
 import { useParticipantContext } from '@/context/ParticipantContext';
 import { useGroupContext } from '@/context/GroupContext';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const ParticipantListItem = ({ participant, onPress }: { participant: any; onPress: () => void }) => (
   <TouchableOpacity 
@@ -46,14 +47,28 @@ export default function GroupDetailsScreen() {
   const { deleteGroup } = useGroupContext();
   const [isAddParticipantModalVisible, setIsAddParticipantModalVisible] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddingParticipant, setIsAddingParticipant] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetchParticipants(id as string);
-    }
+    const loadParticipants = async () => {
+      if (id) {
+        try {
+          await fetchParticipants(id as string);
+        } catch (error) {
+          console.error('Error fetching participants:', error);
+          Alert.alert('Error', 'Failed to load participants');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    loadParticipants();
   }, [id]);
 
   const handleAddParticipant = async (participantData: any) => {
+    setIsAddingParticipant(true);
     try {
       await addParticipant(id as string, {
         ...participantData,
@@ -64,6 +79,9 @@ export default function GroupDetailsScreen() {
       setIsAddParticipantModalVisible(false);
     } catch (error) {
       console.error('Error adding participant:', error);
+      Alert.alert('Error', 'Failed to add participant');
+    } finally {
+      setIsAddingParticipant(false);
     }
   };
 
@@ -73,29 +91,16 @@ export default function GroupDetailsScreen() {
 
   const handleDeleteGroup = async () => {
     setIsMenuVisible(false);
-    Alert.alert(
-      "Delete Group",
-      "Are you sure you want to delete this group?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteGroup(id as string);
-              router.replace('/');
-            } catch (error) {
-              console.error('Error deleting group:', error);
-              Alert.alert('Error', 'Failed to delete group. Please try again.');
-            }
-          }
-        }
-      ]
-    );
+    setIsDeleting(true);
+    try {
+      await deleteGroup(id as string);
+      router.replace('/');
+    } catch (error) {
+      console.error('Error deleting group:', error);
+      Alert.alert('Error', 'Failed to delete group');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const MenuModal = () => (
@@ -130,8 +135,25 @@ export default function GroupDetailsScreen() {
     </Modal>
   );
 
+  if (isLoading) {
+    return <LoadingScreen message="Loading participants..." />;
+  }
+
+  if (isDeleting) {
+    return <LoadingScreen message="Deleting group..." />;
+  }
+
+  if (isAddingParticipant) {
+    return <LoadingScreen message="Adding participant..." />;
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
+      <Stack.Screen 
+        options={{
+          headerShown: false
+        }}
+      />
       <Header 
         title="Group Details" 
         path={() => router.replace(`/`)}

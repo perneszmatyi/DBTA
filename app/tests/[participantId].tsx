@@ -4,6 +4,7 @@ import { useLocalSearchParams, router, Stack } from 'expo-router';
 import Header from '@/components/navigation/Header';
 import { useTestContext } from '@/context/TestContext';
 import { Ionicons } from '@expo/vector-icons';
+import LoadingScreen from '@/components/LoadingScreen';
 
 import ReactionTimeTest from './testModules/reactionTimeTest';
 import MemoryTest from './testModules/memoryTest';
@@ -26,7 +27,8 @@ export default function TestScreen() {
     updateReactionResults, 
     updateMemoryResults, 
     updateBalanceResults, 
-    updateChoiceResults 
+    updateChoiceResults,
+    isSaving
   } = useTestContext();
 
   const handleQuitTest = () => {
@@ -99,6 +101,10 @@ export default function TestScreen() {
         ]
       );
     };
+
+    if (isSaving) {
+      return <LoadingScreen message="Saving test results..." />;
+    }
 
     return (
       <View className="flex-1 justify-center items-center p-4">

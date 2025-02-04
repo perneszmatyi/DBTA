@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal, Alert } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Header from '@/components/navigation/Header';
 import { useParticipantContext } from '@/context/ParticipantContext';
+import { useGroupContext } from '@/context/GroupContext';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const StatCard = ({ label, value, icon }: { label: string; value: string | number; icon: string }) => (
   <View className="bg-white p-4 rounded-lg shadow-sm">
@@ -18,7 +20,24 @@ const StatCard = ({ label, value, icon }: { label: string; value: string | numbe
 export default function ParticipantDetailsScreen() {
   const { id } = useLocalSearchParams();
   const { currentParticipant, participants, deleteParticipant } = useParticipantContext();
+  const { currentGroup } = useGroupContext();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Any initial data loading can go here
+      } catch (error) {
+        console.error('Error loading participant data:', error);
+        Alert.alert('Error', 'Failed to load participant data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   // Find the participant in the list
   const participant = participants.find(p => p.id === id) || currentParticipant;
@@ -31,33 +50,20 @@ export default function ParticipantDetailsScreen() {
     }
   };
 
-  const handleDeleteParticipant = () => {
+  const handleDeleteParticipant = async () => {
     setIsMenuVisible(false);
-    Alert.alert(
-      "Delete Participant",
-      "Are you sure you want to delete this participant? This will also delete all their test results. This action cannot be undone.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              if (participant) {
-                await deleteParticipant(participant.id, participant.groupId);
-                router.back();
-              }
-            } catch (error) {
-              console.error('Error deleting participant:', error);
-              Alert.alert('Error', 'Failed to delete participant. Please try again.');
-            }
-          }
-        }
-      ]
-    );
+    setIsDeleting(true);
+    try {
+      if (participant && currentGroup) {
+        await deleteParticipant(participant.id, currentGroup.id);
+        router.back();
+      }
+    } catch (error) {
+      console.error('Error deleting participant:', error);
+      Alert.alert('Error', 'Failed to delete participant');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const MenuModal = () => (
@@ -85,24 +91,28 @@ export default function ParticipantDetailsScreen() {
     </Modal>
   );
 
-  if (!participant) {
-    return (
-      <SafeAreaView className="flex-1 bg-neutral-50">
-        <Header 
-          title="Participant Details" 
-          path={() => router.replace('/')}
-        />
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-neutral-500">Participant not found</Text>
-        </View>
-      </SafeAreaView>
-    );
+  if (isLoading) {
+    return <LoadingScreen message="Loading participant details..." />;
   }
+
+  if (isDeleting) {
+    return <LoadingScreen message="Deleting participant..." />;
+  }
+
+  if (!participant || !currentGroup) {
+    return <LoadingScreen message="Loading participant details..." />;
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
+      <Stack.Screen 
+        options={{
+          headerShown: false
+        }}
+      />
       <Header 
         title="Participant Details" 
-        path={() => router.replace(`/groups/${participant.groupId}`)}
+        path={() => router.replace(`/groups/${currentGroup.id}`)}
         rightElement={
           <TouchableOpacity 
             onPress={() => setIsMenuVisible(true)}

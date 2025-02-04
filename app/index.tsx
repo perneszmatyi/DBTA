@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
-import { Link } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { Link, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import CreateGroupModal from '@/components/CreateGroupModal';
 import { useGroupContext } from '@/context/GroupContext';
 import { Timestamp } from 'firebase/firestore';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const GroupCard = ({ group }: { group: any }) => {
   const formatDate = (timestamp: Timestamp) => {
@@ -42,34 +43,61 @@ const GroupCard = ({ group }: { group: any }) => {
 };
 
 export default function HomeScreen() {
-  const { createGroup, groups } = useGroupContext();
+  const { createGroup, groups, fetchGroups } = useGroupContext();
   const [isCreateGroupModalVisible, setIsCreateGroupModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+
+  useEffect(() => {
+    const loadGroups = async () => {
+      try {
+        await fetchGroups();
+      } catch (error) {
+        console.error('Error loading groups:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadGroups();
+  }, []);
 
   const handleCreateNewGroup = async (name: string) => {
+    setIsCreating(true);
     try {
       await createGroup(name);
       setIsCreateGroupModalVisible(false);
     } catch (error) {
       console.error('Error creating group:', error);
+      Alert.alert('Error', 'Failed to create group');
+    } finally {
+      setIsCreating(false);
     }
   };
 
+  if (isLoading) {
+    return <LoadingScreen message="Loading groups..." />;
+  }
+
+  if (isCreating) {
+    return <LoadingScreen message="Creating new group..." />;
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
-      <View className="flex-1 px-4">
-        {/* Header */}
-        <View className="py-6">
-          <Text className="text-3xl font-bold text-neutral-900">Groups</Text>
-          <Text className="text-neutral-500 mt-1">Manage your research groups</Text>
-        </View>
+      <Stack.Screen 
+        options={{
+          headerShown: false
+        }}
+      />
+      
+      {/* Header */}
+      <View className="px-4 py-6 border-b border-neutral-100">
+        <Text className="text-3xl font-bold text-neutral-900">Groups</Text>
 
-        {/* Search Bar */}
-        <TouchableOpacity 
-          className="flex-row items-center bg-white rounded-md px-4 py-3 mb-4 shadow-sm"
-        >
-          <Ionicons name="search-outline" size={20} color="#6B7280" />
-          <Text className="ml-2 text-neutral-500">Search groups...</Text>
-        </TouchableOpacity>
+      </View>
+
+      <View className="flex-1 px-4">
+       
 
         {/* Groups List */}
         <ScrollView 

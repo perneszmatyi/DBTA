@@ -5,6 +5,7 @@ import { useParticipantContext } from './ParticipantContext';
 
 type TestContextType = {
   testResults: TestResults | null;
+  isSaving: boolean;
   updateReactionResults: (results: TestResults['reactionTime']) => void;
   updateMemoryResults: (results: TestResults['memory']) => void;
   updateBalanceResults: (results: TestResults['balance']) => void;
@@ -25,6 +26,7 @@ export const useTestContext = () => {
 
 export function TestProvider({ children }: { children: ReactNode }) {
   const [testResults, setTestResults] = useState<TestResults | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const { participants } = useParticipantContext();
 
   const updateReactionResults = (results: TestResults['reactionTime']) => {
@@ -65,18 +67,21 @@ export function TestProvider({ children }: { children: ReactNode }) {
       throw new Error('Participant not found');
     }
 
-    console.log('testResults', testResults);
+    setIsSaving(true);
+    try {
+      const testSession: TestSession = {
+        participantId,
+        groupId: participant.groupId,
+        timestamp: new Date(),
+        completed: true,
+        tests: testResults
+      };
 
-    const testSession: TestSession = {
-      participantId,
-      groupId: participant.groupId,
-      timestamp: new Date(),
-      completed: true,
-      tests: testResults
-    };
-
-    await testsService.saveTestResults(participantId, testSession);
-    clearResults();
+      await testsService.saveTestResults(participantId, testSession);
+      clearResults();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const clearResults = () => {
@@ -87,6 +92,7 @@ export function TestProvider({ children }: { children: ReactNode }) {
     <TestContext.Provider
       value={{
         testResults,
+        isSaving,
         updateReactionResults,
         updateMemoryResults,
         updateBalanceResults,

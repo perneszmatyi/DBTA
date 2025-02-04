@@ -9,7 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -36,13 +37,31 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
     drivingExperience: ''
   });
 
-  const handleAgeChange = (text: string) => {
-    // Only allow numbers
-    const numericValue = text.replace(/[^0-9]/g, '');
-    setFormData(prev => ({ ...prev, age: numericValue }));
+  const validateForm = () => {
+    const errors: string[] = [];
+    
+    if (!formData.firstName.trim()) errors.push('First name');
+    if (!formData.lastName.trim()) errors.push('Last name');
+    if (!formData.age.trim()) errors.push('Age');
+    if (!formData.gender) errors.push('Gender');
+    if (!formData.intoxicationLevel.trim()) errors.push('Blood Alcohol Content');
+    if (!formData.drivingExperience.trim()) errors.push('Driving experience');
+
+    return errors;
   };
 
   const handleSubmit = () => {
+    const errors = validateForm();
+    
+    if (errors.length > 0) {
+      Alert.alert(
+        'Missing Information',
+        `Please fill in the following fields:\n${errors.join('\n')}`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     onSubmit(formData);
     setFormData({
       firstName: '',
@@ -53,6 +72,12 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
       drivingExperience: ''
     });
     onClose();
+  };
+
+  const handleAgeChange = (text: string) => {
+    // Only allow numbers
+    const numericValue = text.replace(/[^0-9]/g, '');
+    setFormData(prev => ({ ...prev, age: numericValue }));
   };
 
   return (
@@ -69,7 +94,7 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
         >
           <View className="flex-1 justify-end bg-black/60">
             <View className="bg-white rounded-t-3xl h-[90%] shadow-lg">
-              {/* Enhanced Header */}
+              {/* Header */}
               <View className="flex-row justify-between items-center p-5 border-b border-neutral-200">
                 <TouchableOpacity 
                   onPress={onClose}
@@ -89,14 +114,15 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
               <ScrollView className="flex-1 px-5 pt-2">
                 {/* Personal Information */}
                 <View className="mb-8">
-                  <Text className="text-lg font-semibold text-neutral-900 mb-4 flex-row items-center">
+                  <Text className="text-lg font-semibold text-neutral-900 mb-4">
                     Personal Information
+                    <Text className="text-red-500"> *</Text>
                   </Text>
                   <View className="space-y-4">
                     <View>
                       <TextInput
                         className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
-                        placeholder="First Name"
+                        placeholder="First Name *"
                         value={formData.firstName}
                         onChangeText={(text) => setFormData(prev => ({ ...prev, firstName: text }))}
                         placeholderTextColor="#999"
@@ -104,8 +130,8 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
                     </View>
                     <View>
                       <TextInput
-                        className="bg-neutral-50 mt-4 px-4 py-3.5 rounded-xl border border-neutral-200"
-                        placeholder="Last Name"
+                        className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
+                        placeholder="Last Name *"
                         value={formData.lastName}
                         onChangeText={(text) => setFormData(prev => ({ ...prev, lastName: text }))}
                         placeholderTextColor="#999"
@@ -113,8 +139,8 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
                     </View>
                     <View>
                       <TextInput
-                        className="bg-neutral-50 mt-4 mb-8 px-4 py-3.5 rounded-xl border border-neutral-200"
-                        placeholder="Age"
+                        className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
+                        placeholder="Age *"
                         value={formData.age}
                         onChangeText={handleAgeChange}
                         keyboardType="numeric"
@@ -123,40 +149,44 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
                       />
                     </View>
                     
-                    {/* Enhanced Gender Selection */}
-                    <View className="flex-row space-x-3">
-                      {['male', 'female'].map((gender) => (
-                        <TouchableOpacity
-                          key={gender}
-                          onPress={() => setFormData(prev => ({ ...prev, gender: gender as 'male' | 'female' }))}
-                          className={`flex-1 py-3.5 px-4 mr-2 rounded-xl flex-row justify-center items-center space-x-2 ${
-                            formData.gender === gender ? 'bg-primary-500' : 'bg-neutral-50 border border-neutral-200'
-                          }`}
-                        >
-                          <Ionicons 
-                            name={gender === 'male' ? 'male' : 'female'} 
-                            size={18} 
-                            color={formData.gender === gender ? 'white' : '#666'}
-                          />
-                          <Text className={`text-center capitalize ${
-                            formData.gender === gender ? 'text-white' : 'text-neutral-700'
-                          }`}>
-                            {gender}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
+                    {/* Gender Selection */}
+                    <View>
+                      <Text className="text-neutral-600 mb-2">Gender *</Text>
+                      <View className="flex-row space-x-3">
+                        {['male', 'female'].map((gender) => (
+                          <TouchableOpacity
+                            key={gender}
+                            onPress={() => setFormData(prev => ({ ...prev, gender: gender as 'male' | 'female' }))}
+                            className={`flex-1 py-3.5 px-4 rounded-xl flex-row justify-center items-center space-x-2 ${
+                              formData.gender === gender ? 'bg-primary-500' : 'bg-neutral-50 border border-neutral-200'
+                            }`}
+                          >
+                            <Ionicons 
+                              name={gender === 'male' ? 'male' : 'female'} 
+                              size={18} 
+                              color={formData.gender === gender ? 'white' : '#666'}
+                            />
+                            <Text className={`text-center capitalize ${
+                              formData.gender === gender ? 'text-white' : 'text-neutral-700'
+                            }`}>
+                              {gender}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
                     </View>
                   </View>
                 </View>
 
                 {/* Testing Context */}
                 <View className="mb-8">
-                  <Text className="text-lg font-semibold text-neutral-900 mb-4 flex-row items-center">
+                  <Text className="text-lg font-semibold text-neutral-900 mb-4">
                     Testing Context
+                    <Text className="text-red-500"> *</Text>
                   </Text>
                   <TextInput
                     className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
-                    placeholder="Blood Alcohol Content (BAC)"
+                    placeholder="Blood Alcohol Content (BAC) *"
                     value={formData.intoxicationLevel}
                     onChangeText={(text) => setFormData(prev => ({ ...prev, intoxicationLevel: text }))}
                     keyboardType="numeric"
@@ -166,12 +196,13 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
 
                 {/* Driving Background */}
                 <View className="mb-8">
-                  <Text className="text-lg font-semibold text-neutral-900 mb-4 flex-row items-center">
+                  <Text className="text-lg font-semibold text-neutral-900 mb-4">
                     Driving Background
+                    <Text className="text-red-500"> *</Text>
                   </Text>
                   <TextInput
                     className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
-                    placeholder="Years of driving experience"
+                    placeholder="Years of driving experience *"
                     value={formData.drivingExperience}
                     onChangeText={(text) => setFormData(prev => ({ ...prev, drivingExperience: text }))}
                     keyboardType="numeric"
