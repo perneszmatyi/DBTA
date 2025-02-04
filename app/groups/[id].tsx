@@ -93,8 +93,10 @@ export default function GroupDetailsScreen() {
     setIsMenuVisible(false);
     setIsDeleting(true);
     try {
-      await deleteGroup(id as string);
-      router.replace('/');
+      if (id) {
+        await deleteGroup(id as string);
+        router.replace('/');
+      }
     } catch (error) {
       console.error('Error deleting group:', error);
       Alert.alert('Error', 'Failed to delete group');
@@ -151,7 +153,9 @@ export default function GroupDetailsScreen() {
     <SafeAreaView className="flex-1 bg-neutral-50">
       <Stack.Screen 
         options={{
-          headerShown: false
+          headerShown: false,
+          gestureEnabled: false,
+          animation: 'none'
         }}
       />
       <Header 

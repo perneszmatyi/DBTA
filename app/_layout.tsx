@@ -22,23 +22,36 @@ export default function RootLayout() {
         <ParticipantProvider>
           <TestProvider>
             <Stack>
-              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen 
+                name="index" 
+                options={{ 
+                  headerShown: false,
+                  gestureEnabled: false,
+                  animation: 'none'
+                }} 
+              />
               <Stack.Screen 
                 name="groups/[id]" 
                 options={{ 
-                  headerShown: false
+                  headerShown: false,
+                  gestureEnabled: false,
+                  animation: 'none'
                 }} 
               />
               <Stack.Screen 
                 name="participants/[id]" 
                 options={{ 
-                    headerShown: false
+                  headerShown: false,
+                  gestureEnabled: false,
+                  animation: 'none'
                 }} 
               />
               <Stack.Screen 
                 name="tests/[participantId]" 
                 options={{ 
-                    headerShown: false
+                  headerShown: false,
+                  gestureEnabled: false,
+                  animation: 'none'
                 }} 
               />
             </Stack>

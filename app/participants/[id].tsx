@@ -6,6 +6,7 @@ import Header from '@/components/navigation/Header';
 import { useParticipantContext } from '@/context/ParticipantContext';
 import { useGroupContext } from '@/context/GroupContext';
 import LoadingScreen from '@/components/LoadingScreen';
+import { Timestamp } from 'firebase/firestore';
 
 const StatCard = ({ label, value, icon }: { label: string; value: string | number; icon: string }) => (
   <View className="bg-white p-4 rounded-lg shadow-sm">
@@ -16,6 +17,17 @@ const StatCard = ({ label, value, icon }: { label: string; value: string | numbe
     <Text className="text-2xl font-semibold text-neutral-900">{value}</Text>
   </View>
 );
+
+const formatDate = (date: Timestamp | Date | null) => {
+  if (!date) return 'Not tested yet';
+  
+  const d = date instanceof Timestamp ? date.toDate() : date;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  
+  return `${year}/${month}/${day}`;
+};
 
 export default function ParticipantDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -56,7 +68,7 @@ export default function ParticipantDetailsScreen() {
     try {
       if (participant && currentGroup) {
         await deleteParticipant(participant.id, currentGroup.id);
-        router.back();
+        router.replace(`/groups/${currentGroup.id}`);
       }
     } catch (error) {
       console.error('Error deleting participant:', error);
@@ -107,7 +119,9 @@ export default function ParticipantDetailsScreen() {
     <SafeAreaView className="flex-1 bg-neutral-50">
       <Stack.Screen 
         options={{
-          headerShown: false
+          headerShown: false,
+          gestureEnabled: false,
+          animation: 'none'
         }}
       />
       <Header 
@@ -178,7 +192,7 @@ export default function ParticipantDetailsScreen() {
               <View className="flex-row justify-between">
                 <Text className="text-neutral-500">Last Test Date</Text>
                 <Text className="text-neutral-900">
-                  {participant.lastTestDate ? new Date(participant.lastTestDate).toLocaleDateString() : 'Not tested'}
+                  {formatDate(participant.lastTestDate)}
                 </Text>
               </View>
             </View>

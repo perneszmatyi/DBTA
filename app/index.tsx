@@ -86,7 +86,9 @@ export default function HomeScreen() {
     <SafeAreaView className="flex-1 bg-neutral-50">
       <Stack.Screen 
         options={{
-          headerShown: false
+          headerShown: false,
+          gestureEnabled: false,
+          animation: 'none'
         }}
       />
       
