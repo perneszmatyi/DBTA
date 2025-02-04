@@ -34,7 +34,7 @@ export const testConfig = {
     // Play area as percentage of screen dimensions
     // Leaving safe margins on all sides
     PLAY_AREA: {
-      TOP: SCREEN_HEIGHT * 0.09,    // 15% from top
+      TOP: SCREEN_HEIGHT * 0.1,    // 15% from top
       BOTTOM: SCREEN_HEIGHT * 0.75 - BUTTON_SPACE,  // Adjusted to not overlap with button
       LEFT: SCREEN_WIDTH * 0.1,      // 10% from left
       RIGHT: SCREEN_WIDTH * 0.9,     // 90% from left
