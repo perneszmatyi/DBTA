@@ -1,4 +1,4 @@
-# SZE Teszt Alkalmazás - Fejlesztői Dokumentáció
+# Driver Behavior Test App (DBTA) - Fejlesztői Dokumentáció
 
 ## Projekt Áttekintés
 
