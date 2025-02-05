@@ -118,29 +118,32 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
                     Personal Information
                     <Text className="text-red-500"> *</Text>
                   </Text>
-                  <View className="space-y-4">
+                  <View className="space-y-6">
                     <View>
+                      <Text className="text-neutral-600 mb-2">First Name *</Text>
                       <TextInput
                         className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
-                        placeholder="First Name *"
+                        placeholder="Enter first name"
                         value={formData.firstName}
                         onChangeText={(text) => setFormData(prev => ({ ...prev, firstName: text }))}
                         placeholderTextColor="#999"
                       />
                     </View>
                     <View>
+                      <Text className="text-neutral-600 mb-2">Last Name *</Text>
                       <TextInput
                         className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
-                        placeholder="Last Name *"
+                        placeholder="Enter last name"
                         value={formData.lastName}
                         onChangeText={(text) => setFormData(prev => ({ ...prev, lastName: text }))}
                         placeholderTextColor="#999"
                       />
                     </View>
                     <View>
+                      <Text className="text-neutral-600 mb-2">Age *</Text>
                       <TextInput
                         className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
-                        placeholder="Age *"
+                        placeholder="Enter age"
                         value={formData.age}
                         onChangeText={handleAgeChange}
                         keyboardType="numeric"
@@ -184,14 +187,17 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
                     Testing Context
                     <Text className="text-red-500"> *</Text>
                   </Text>
-                  <TextInput
-                    className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
-                    placeholder="Blood Alcohol Content (BAC) *"
-                    value={formData.intoxicationLevel}
-                    onChangeText={(text) => setFormData(prev => ({ ...prev, intoxicationLevel: text }))}
-                    keyboardType="numeric"
-                    placeholderTextColor="#999"
-                  />
+                  <View>
+                    <Text className="text-neutral-600 mb-2">Blood Alcohol Content (BAC) *</Text>
+                    <TextInput
+                      className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
+                      placeholder="Enter BAC level"
+                      value={formData.intoxicationLevel}
+                      onChangeText={(text) => setFormData(prev => ({ ...prev, intoxicationLevel: text }))}
+                      keyboardType="numeric"
+                      placeholderTextColor="#999"
+                    />
+                  </View>
                 </View>
 
                 {/* Driving Background */}
@@ -200,14 +206,17 @@ export default function AddParticipantModal({ isVisible, onClose, onSubmit }: Ad
                     Driving Background
                     <Text className="text-red-500"> *</Text>
                   </Text>
-                  <TextInput
-                    className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
-                    placeholder="Years of driving experience *"
-                    value={formData.drivingExperience}
-                    onChangeText={(text) => setFormData(prev => ({ ...prev, drivingExperience: text }))}
-                    keyboardType="numeric"
-                    placeholderTextColor="#999"
-                  />
+                  <View>
+                    <Text className="text-neutral-600 mb-2">Years of driving experience *</Text>
+                    <TextInput
+                      className="bg-neutral-50 px-4 py-3.5 rounded-xl border border-neutral-200"
+                      placeholder="Enter years of experience"
+                      value={formData.drivingExperience}
+                      onChangeText={(text) => setFormData(prev => ({ ...prev, drivingExperience: text }))}
+                      keyboardType="numeric"
+                      placeholderTextColor="#999"
+                    />
+                  </View>
                 </View>
               </ScrollView>
             </View>

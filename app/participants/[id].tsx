@@ -36,11 +36,15 @@ export default function ParticipantDetailsScreen() {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [groupId, setGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Any initial data loading can go here
+        const participant = participants.find(p => p.id === id);
+        if (participant) {
+          setGroupId(participant.groupId);
+        }
       } catch (error) {
         console.error('Error loading participant data:', error);
         Alert.alert('Error', 'Failed to load participant data');
@@ -49,7 +53,7 @@ export default function ParticipantDetailsScreen() {
       }
     };
     loadData();
-  }, []);
+  }, [id, participants]);
 
   // Find the participant in the list
   const participant = participants.find(p => p.id === id) || currentParticipant;
@@ -126,7 +130,13 @@ export default function ParticipantDetailsScreen() {
       />
       <Header 
         title="Participant Details" 
-        path={() => router.replace(`/groups/${currentGroup.id}`)}
+        path={() => {
+          if (groupId) {
+            router.replace(`/groups/${groupId}`);
+          } else {
+            router.back();
+          }
+        }}
         rightElement={
           <TouchableOpacity 
             onPress={() => setIsMenuVisible(true)}
